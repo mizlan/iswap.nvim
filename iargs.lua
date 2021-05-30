@@ -7,8 +7,7 @@ function M.init()
     iargs = {
       module_path = "iargs.internal",
       is_supported = function(lang)
-        -- TODO: you don't want your queries to be named `awesome-query`, do you ?
-        return queries.get_query(lang, 'awesome-query') ~= nil
+        return queries.get_query(lang, 'iargs-list') ~= nil
       end
     }
   }
