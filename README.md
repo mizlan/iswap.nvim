@@ -1,4 +1,4 @@
-# iargs.nvim
+# iswap.nvim
 
 # TODO (for you)
 After using this template, you will need to :

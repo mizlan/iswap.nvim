@@ -4,10 +4,10 @@ local M = {}
 
 function M.init()
   require "nvim-treesitter".define_modules {
-    iargs = {
-      module_path = "iargs.internal",
+    iswap = {
+      module_path = "iswap.internal",
       is_supported = function(lang)
-        return queries.get_query(lang, 'iargs-list') ~= nil
+        return queries.get_query(lang, 'iswap-list') ~= nil
       end
     }
   }
