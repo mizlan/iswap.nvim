@@ -24,7 +24,7 @@ end
 -- customization and ACTIVE_RANGE looks like {{row, col}, {row, col}} and is
 -- used only to determine where to grey out
 function M.prompt(bufnr, config, nodes, active_range, times)
-  local keys = config.keys or 'asdfghjkl;'
+  local keys = config.keys
   if #nodes > #keys then
     -- TODO: do something about this
     -- too many nodes, not enough keys, and I don't want to start using prefixes
