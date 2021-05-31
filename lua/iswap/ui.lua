@@ -16,8 +16,8 @@ function M.grey_the_rest_out(bufnr, begin_exclude, end_exclude)
   local top_line = win_info.topline - 1
   local bot_line = win_info.botline - 1
   M.clear_namespace(bufnr, M.argts_ns)
-  vim.highlight.range(bufnr, M.argts_ns, 'ArgUnused', {top_line, 0}, begin_exclude)
-  vim.highlight.range(bufnr, M.argts_ns, 'ArgUnused', end_exclude, {bot_line, -1})
+  vim.highlight.range(bufnr, M.argts_ns, 'ISwapGrey', {top_line, 0}, begin_exclude)
+  vim.highlight.range(bufnr, M.argts_ns, 'ISwapGrey', end_exclude, {bot_line, -1})
 end
 
 -- Prompt user from NODES a total of TIMES times in BUFNR. CONFIG is used for
@@ -44,7 +44,7 @@ function M.prompt(bufnr, config, nodes, active_range, times)
     ts_utils.highlight_node(node, bufnr, M.argts_ns, config.hl_selection or 'Visual')
     local start_row, start_col = node:range()
     vim.api.nvim_buf_set_extmark(bufnr, M.argts_ns, start_row, start_col,
-      { virt_text = { {key, "ArgSnipe" } }, virt_text_pos = "overlay", hl_mode = "blend" })
+      { virt_text = { {key, "ISwapSnipe" } }, virt_text_pos = "overlay", hl_mode = "blend" })
   end
   vim.cmd('redraw')
 
