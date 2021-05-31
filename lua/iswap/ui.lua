@@ -33,7 +33,7 @@ function M.prompt(bufnr, config, nodes, active_range, times)
   end
 
   local range_start, range_end = unpack(active_range)
-  if config.grey then
+  if config.grey ~= 'disable' then
     M.grey_the_rest_out(bufnr, range_start, range_end)
   end
 
