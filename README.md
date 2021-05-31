@@ -17,7 +17,9 @@ Plug 'mizlan/iswap.nvim'
 
 Run the command `:ISwap` when your cursor is in a location that is suitable for
 swapping around things. These include lists/arrays, function arguments, and
-parameters in function definitions. See the gif above for example usage.
+parameters in function definitions. Then, hit two keys corresponding to the
+items you wish to be swapped. After both keys are hit, the text should
+immediately swap in the buffer. See the gif above for example usage.
 
 ## configuration
 
