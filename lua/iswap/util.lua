@@ -1,7 +1,7 @@
 local M = {}
 
 function M.err(msg, flag)
-  if flag then
+  if flag == nil then
     vim.api.nvim_echo({{msg, 'Error'}}, true, {})
   end
 end
