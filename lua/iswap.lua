@@ -27,9 +27,9 @@ function M.iswap(config)
   local parent = internal.get_list_node_at_cursor(winnr)
   if not parent then return end
   local children = ts_utils.get_named_children(parent)
+  local sr, sc, er, ec = parent:range()
   -- nodes to swap
-  local a, b, c, d = parent:range()
-  local a, b = unpack(ui.prompt(bufnr, {}, children, {{a, b}, {c, d}}, 2))
+  local a, b = unpack(ui.prompt(bufnr, {}, children, {{sr, sc}, {er, ec}}, 2))
   ts_utils.swap_nodes(a, b, bufnr)
 end
   
