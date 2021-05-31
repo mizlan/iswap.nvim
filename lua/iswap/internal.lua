@@ -15,6 +15,12 @@ function M.find(winnr)
   local root = ts_utils.get_root_for_position(unpack(cursor_range))
   local ft = vim.api.nvim_buf_get_option(bufnr, 'filetype')
   local q = queries.get_query(ft_to_lang(ft), 'iswap-list')
+  -- TODO: initialize correctly so that :ISwap is not callable on unsupported
+  -- languages, if that's possible.
+  if not q then
+    util.err('Cannot query this filetype')
+    return
+  end
   return q:iter_captures(root, bufnr, row, row + 1)
 end
 
