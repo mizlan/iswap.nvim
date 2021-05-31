@@ -30,7 +30,12 @@ function M.get_list_node_at_cursor(winnr)
   ret = nil
   local cursor = vim.api.nvim_win_get_cursor(vim.fn.win_getid(winnr))
   local cursor_range = { cursor[1] - 1, cursor[2] }
-  for id, node, metadata in M.find(winnr) do
+  local iswap_list_captures = M.find(winnr)
+  if not iswap_list_captures then
+    -- query not supported
+    return
+  end
+  for id, node, metadata in iswap_list_captures do
     local start_row, start_col, end_row, end_col = node:range()
     local start = { start_row, start_col }
     local end_ = { end_row, end_col }
