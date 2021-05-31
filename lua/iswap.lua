@@ -3,8 +3,19 @@ local ui = require('iswap.ui')
 local util = require('iswap.util')
 local internal = require('iswap.internal')
 local ts_utils = require('nvim-treesitter.ts_utils')
+local default_config = require('iswap.defaults')
 
 local M = {}
+
+M.config = default_config
+
+function M.setup(config)
+  M.config = setmetatable(config, { __index = default_config })
+end
+
+function M.evaluate_config(config)
+  return config and setmetatable(config, {__index = M.config}) or M.config
+end
 
 function M.init()
   require 'nvim-treesitter'.define_modules {
@@ -18,7 +29,7 @@ function M.init()
 end
 
 function M.iswap(config)
-  config = config or {}
+  config = M.evaluate_config(config)
   local cursor_row = vim.fn.line('.') - 1
   local cursor_col = vim.fn.col('.')
   local bufnr = vim.fn.bufnr()
