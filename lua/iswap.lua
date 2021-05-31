@@ -39,8 +39,13 @@ function M.iswap(config)
   if not parent then return end
   local children = ts_utils.get_named_children(parent)
   local sr, sc, er, ec = parent:range()
-  -- nodes to swap
-  local a, b = unpack(ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 2))
+  -- a and b are the nodes to swap
+  local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 2)
+  if not (type(user_input) == 'table' and #user_input == 2) then
+    return
+  end
+  local a, b = unpack(user_input)
+  if a == nil or b == nil then return end
   ts_utils.swap_nodes(a, b, bufnr)
 end
   
