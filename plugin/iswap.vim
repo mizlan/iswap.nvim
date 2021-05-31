@@ -1,5 +1,6 @@
 lua require("iswap").init()
 
-highlight! link ArgSnipe Search
-highlight! link ArgUnused Comment
+highlight default link ArgSnipe Search
+highlight default link ArgUnused Comment
 
+command ISwap lua require('iswap').iswap()
