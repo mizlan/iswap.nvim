@@ -51,11 +51,8 @@ function M.prompt(bufnr, config, nodes, active_range, times)
   local res = {}
   for i = 1, times do
     local keystr = util.getchar_handler(function() M.clear_namespace(bufnr) end)
-    if keystr == nil then break end
-
-    if map[keystr] ~= nil then
-      table.insert(res, map[keystr])
-    end
+    if keystr == nil or map[keystr] == nil then break end
+    table.insert(res, map[keystr])
   end
   M.clear_namespace(bufnr, M.argts_ns)
   return res
