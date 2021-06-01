@@ -27,7 +27,7 @@ end
 -- Get the closest parent that can be used as a list wherein elements can be
 -- swapped.
 function M.get_list_node_at_cursor(winnr)
-  ret = nil
+  local ret = nil
   local cursor = vim.api.nvim_win_get_cursor(vim.fn.win_getid(winnr))
   local cursor_range = { cursor[1] - 1, cursor[2] }
   local iswap_list_captures = M.find(winnr)
