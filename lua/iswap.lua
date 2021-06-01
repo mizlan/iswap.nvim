@@ -1,6 +1,5 @@
 local queries = require('nvim-treesitter.query')
 local ui = require('iswap.ui')
-local util = require('iswap.util')
 local internal = require('iswap.internal')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local default_config = require('iswap.defaults')
@@ -30,8 +29,6 @@ end
 
 function M.iswap(config)
   config = M.evaluate_config(config)
-  local cursor_row = vim.fn.line('.') - 1
-  local cursor_col = vim.fn.col('.')
   local bufnr = vim.fn.bufnr()
   local winnr = vim.fn.winnr()
 
@@ -48,5 +45,5 @@ function M.iswap(config)
   if a == nil or b == nil then return end
   ts_utils.swap_nodes(a, b, bufnr)
 end
-  
+
 return M

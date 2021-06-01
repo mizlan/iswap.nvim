@@ -15,7 +15,7 @@ function M.grey_the_rest_out(bufnr, config, begin_exclude, end_exclude)
   local win_info = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1]
   local top_line = win_info.topline - 1
   local bot_line = win_info.botline - 1
-  M.clear_namespace(bufnr, M.argts_ns)
+  M.clear_namespace(bufnr)
   vim.highlight.range(bufnr, M.argts_ns, config.hl_grey, {top_line, 0}, begin_exclude)
   vim.highlight.range(bufnr, M.argts_ns, config.hl_grey, end_exclude, {bot_line, -1})
 end
@@ -49,12 +49,12 @@ function M.prompt(bufnr, config, nodes, active_range, times)
   vim.cmd('redraw')
 
   local res = {}
-  for i = 1, times do
-    local keystr = util.getchar_handler(function() M.clear_namespace(bufnr) end)
+  for _ = 1, times do
+    local keystr = util.getchar_handler()
     if keystr == nil or map[keystr] == nil then break end
     table.insert(res, map[keystr])
   end
-  M.clear_namespace(bufnr, M.argts_ns)
+  M.clear_namespace(bufnr)
   return res
 end
 
