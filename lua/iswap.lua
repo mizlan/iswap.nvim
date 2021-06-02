@@ -29,10 +29,10 @@ end
 
 function M.iswap(config)
   config = M.evaluate_config(config)
-  local bufnr = vim.fn.bufnr()
-  local winnr = vim.fn.winnr()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local winid = vim.api.nvim_get_current_win()
 
-  local parent = internal.get_list_node_at_cursor(winnr)
+  local parent = internal.get_list_node_at_cursor(winid)
   if not parent then return end
   local children = ts_utils.get_named_children(parent)
   local sr, sc, er, ec = parent:range()

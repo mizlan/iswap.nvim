@@ -7,13 +7,13 @@ local ft_to_lang = require('nvim-treesitter.parsers').ft_to_lang
 local M = {}
 
 --
-function M.find(winnr)
-  local bufnr = vim.fn.winbufnr(winnr)
-  local cursor = vim.api.nvim_win_get_cursor(vim.fn.win_getid(winnr))
+function M.find(winid)
+  local bufnr = vim.api.nvim_win_get_buf(winid)
+  local cursor = vim.api.nvim_win_get_cursor(winid)
   local cursor_range = { cursor[1] - 1, cursor[2] }
   local row = cursor_range[1]
   local root = ts_utils.get_root_for_position(unpack(cursor_range))
-  local ft = vim.api.nvim_buf_get_option(bufnr, 'filetype')
+  local ft = vim.bo[bufnr].filetype
   local q = queries.get_query(ft_to_lang(ft), 'iswap-list')
   -- TODO: initialize correctly so that :ISwap is not callable on unsupported
   -- languages, if that's possible.
@@ -26,11 +26,11 @@ end
 
 -- Get the closest parent that can be used as a list wherein elements can be
 -- swapped.
-function M.get_list_node_at_cursor(winnr)
+function M.get_list_node_at_cursor(winid)
   local ret = nil
-  local cursor = vim.api.nvim_win_get_cursor(vim.fn.win_getid(winnr))
+  local cursor = vim.api.nvim_win_get_cursor(winid)
   local cursor_range = { cursor[1] - 1, cursor[2] }
-  local iswap_list_captures = M.find(winnr)
+  local iswap_list_captures = M.find(winid)
   if not iswap_list_captures then
     -- query not supported
     return
