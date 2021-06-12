@@ -13,7 +13,10 @@ function M.find(winid)
   local cursor = vim.api.nvim_win_get_cursor(winid)
   local cursor_range = { cursor[1] - 1, cursor[2] }
   local row = cursor_range[1]
-  local root = ts_utils.get_root_for_position(unpack(cursor_range))
+  -- local root = ts_utils.get_root_for_position(unpack(cursor_range))
+  -- NOTE: this root is freshly parsed, but this may not be the best way of getting a fresh parse
+  --       see :h Query:iter_captures()
+  local root = vim.treesitter.get_parser(bufnr, ft_to_lang(ft)):parse()[1]:root()
   local ft = vim.bo[bufnr].filetype
   local q = queries.get_query(ft_to_lang(ft), 'iswap-list')
   -- TODO: initialize correctly so that :ISwap is not callable on unsupported
