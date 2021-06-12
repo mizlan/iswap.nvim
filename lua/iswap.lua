@@ -34,9 +34,9 @@ function M.iswap(config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
 
-  local parent = internal.get_list_node_at_cursor(winid)
+  local parent = internal.get_list_node_at_cursor(winid, config)
   if not parent then
-    if config.debug then err('did not find a satisfiable parent node') end
+    err('did not find a satisfiable parent node', config.debug)
     return
   end
   local children = ts_utils.get_named_children(parent)
@@ -44,12 +44,12 @@ function M.iswap(config)
   -- a and b are the nodes to swap
   local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 2)
   if not (type(user_input) == 'table' and #user_input == 2) then
-    if config.debug then err('did not get two valid user inputs') end
+    err('did not get two valid user inputs', config.debug)
     return
   end
   local a, b = unpack(user_input)
   if a == nil or b == nil then
-    if config.debug then err('some of the nodes were nil') end
+    err('some of the nodes were nil', config.debug)
     return
   end
   ts_utils.swap_nodes(a, b, bufnr)
