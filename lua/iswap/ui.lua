@@ -1,5 +1,6 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
 local util = require('iswap.util')
+local err = util.err
 
 local M = {}
 
@@ -28,7 +29,7 @@ function M.prompt(bufnr, config, nodes, active_range, times)
   if #nodes > #keys then
     -- TODO: do something about this
     -- too many nodes, not enough keys, and I don't want to start using prefixes
-    util.err('Too many nodes but not enough keys!')
+    err('Too many nodes but not enough keys!', true)
     return
   end
 
