@@ -18,6 +18,31 @@ function M.within(a, b, c)
   return M.compare_position(a, b) and M.compare_position(b, c)
 end
 
+function M.nodes_containing_cursor(node)
+  local cursor = vim.api.nvim_win_get_cursor(winid)
+  local cursor_range = { cursor[1] - 1, cursor[2] }
+  return M.nodes_containing_pos(node, cursor_range)
+end
+
+-- pos is in form {r, c}
+function M.node_contains_pos(node, pos)
+  local sr, sc, er, ec = node:range()
+  local s = {sr, sc}
+  local e = {er, ec}
+  print(vim.inspect(s), vim.inspect(e), vim.inspect(pos))
+  return M.within(s, pos, e)
+end
+
+function M.nodes_containing_pos(nodes, pos)
+  local idxs = {}
+  for i, node in ipairs(nodes) do
+    if M.node_contains_pos(node, pos) then
+      table.insert(idxs, i)
+    end
+  end
+  return idxs
+end
+
 function M.getchar_handler()
   local ok, key = pcall(vim.fn.getchar)
   if not ok then return nil end
