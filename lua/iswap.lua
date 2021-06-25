@@ -55,4 +55,46 @@ function M.iswap(config)
   ts_utils.swap_nodes(a, b, bufnr)
 end
 
+-- TODO: refactor iswap() and iswap_with()
+-- swap current with one other node
+function M.iswap_with(config)
+  config = M.evaluate_config(config)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local winid = vim.api.nvim_get_current_win()
+
+  local parent = internal.get_list_node_at_cursor(winid, config)
+  if not parent then
+    err('did not find a satisfiable parent node', config.debug)
+    return
+  end
+  local children = ts_utils.get_named_children(parent)
+
+
+  local cur_nodes = util.nodes_containing_cursor(children)
+  if #cur_nodes == 0 then
+    err('not on a node!', 1)
+  end
+
+  if #cur_nodes > 1 then
+    err('multiple found, using first', config.debug)
+  end
+
+  local cur_node = children[cur_nodes[1]]
+  table.remove(children, cur_nodes[1])
+
+  local sr, sc, er, ec = parent:range()
+  -- a and b are the nodes to swap
+  local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
+  if not (type(user_input) == 'table' and #user_input == 1) then
+    err('did not get two valid user inputs', config.debug)
+    return
+  end
+  local a = unpack(user_input)
+  if a == nil then
+    err('the node was nil', config.debug)
+    return
+  end
+  ts_utils.swap_nodes(a, cur_node, bufnr)
+end
+
 return M
