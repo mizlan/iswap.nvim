@@ -8,9 +8,9 @@ end
 
 function M.compare_position(a, b)
   if a[1] == b[1] then
-    return a[2] < b[2]
+    return a[2] <= b[2]
   else
-    return a[1] < b[1]
+    return a[1] <= b[1]
   end
 end
 
