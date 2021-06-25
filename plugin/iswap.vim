@@ -5,3 +5,4 @@ lua require("iswap").init()
 " highlight default link ISwapGrey Comment
 
 command ISwap lua require('iswap').iswap()
+command ISwapWith lua require('iswap').iswap_with()
