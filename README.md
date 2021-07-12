@@ -21,6 +21,10 @@ parameters in function definitions. Then, hit two keys corresponding to the
 items you wish to be swapped. After both keys are hit, the text should
 immediately swap in the buffer. See the gif above for example usage.
 
+Use `:ISwapWith` if you want to have the element your cursor is over
+automatically as one of the elements. This way, you only need one keypress to
+make a swap.
+
 ## configuration
 
 In your `init.lua`:
@@ -51,3 +55,8 @@ require('iswap').setup{
 
 inspired by [hop.nvim](https://github.com/phaazon/hop.nvim) and
 [nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects)
+
+## todo
+
+- add angle bracket stuff
+- add docs and stuff
