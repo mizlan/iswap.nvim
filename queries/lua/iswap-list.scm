@@ -1,4 +1,5 @@
 [
+  (variable_declarator)
   (arguments)
   (parameters)
   (table)
