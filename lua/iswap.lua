@@ -41,6 +41,10 @@ function M.iswap(config)
   end
   local children = ts_utils.get_named_children(parent)
   local sr, sc, er, ec = parent:range()
+
+  -- nothing to swap here
+  if #children < 2 then return end
+
   -- a and b are the nodes to swap
   local a, b
 
@@ -78,6 +82,8 @@ function M.iswap_with(config)
   end
   local children = ts_utils.get_named_children(parent)
 
+  -- nothing to swap here
+  if #children < 2 then return end
 
   local cur_nodes = util.nodes_containing_cursor(children)
   if #cur_nodes == 0 then
