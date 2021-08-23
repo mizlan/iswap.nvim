@@ -41,13 +41,26 @@ function M.iswap(config)
   end
   local children = ts_utils.get_named_children(parent)
   local sr, sc, er, ec = parent:range()
+
+  -- nothing to swap here
+  if #children < 2 then return end
+
   -- a and b are the nodes to swap
-  local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 2)
-  if not (type(user_input) == 'table' and #user_input == 2) then
-    err('did not get two valid user inputs', config.debug)
-    return
+  local a, b
+
+  -- enable autoswapping with two children
+  -- and default to prompting for user input
+  if config.autoswap and #children == 2 then
+    a, b = unpack(children)
+  else
+    local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 2)
+    if not (type(user_input) == 'table' and #user_input == 2) then
+      err('did not get two valid user inputs', config.debug)
+      return
+    end
+    a, b = unpack(user_input)
   end
-  local a, b = unpack(user_input)
+
   if a == nil or b == nil then
     err('some of the nodes were nil', config.debug)
     return
@@ -69,6 +82,8 @@ function M.iswap_with(config)
   end
   local children = ts_utils.get_named_children(parent)
 
+  -- nothing to swap here
+  if #children < 2 then return end
 
   local cur_nodes = util.nodes_containing_cursor(children)
   if #cur_nodes == 0 then
@@ -83,13 +98,23 @@ function M.iswap_with(config)
   table.remove(children, cur_nodes[1])
 
   local sr, sc, er, ec = parent:range()
-  -- a and b are the nodes to swap
-  local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
-  if not (type(user_input) == 'table' and #user_input == 1) then
-    err('did not get two valid user inputs', config.debug)
-    return
+
+  -- a is the node to swap the cur_node with
+  local a
+
+  -- enable autoswapping with one other child
+  -- and default to prompting for user input
+  if config.autoswap and #children == 1 then
+    a = children[1]
+  else
+    local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
+    if not (type(user_input) == 'table' and #user_input == 1) then
+      err('did not get a valid user input', config.debug)
+      return
+    end
+    a = unpack(user_input)
   end
-  local a = unpack(user_input)
+
   if a == nil then
     err('the node was nil', config.debug)
     return
