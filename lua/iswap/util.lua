@@ -29,7 +29,6 @@ function M.node_contains_pos(node, pos)
   local sr, sc, er, ec = node:range()
   local s = {sr, sc}
   local e = {er, ec}
-  print(vim.inspect(s), vim.inspect(e), vim.inspect(pos))
   return M.within(s, pos, e)
 end
 
