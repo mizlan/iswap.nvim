@@ -66,6 +66,8 @@ function M.iswap(config)
     return
   end
   ts_utils.swap_nodes(a, b, bufnr)
+
+  vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
 end
 
 -- TODO: refactor iswap() and iswap_with()
@@ -120,6 +122,8 @@ function M.iswap_with(config)
     return
   end
   ts_utils.swap_nodes(a, cur_node, bufnr)
+
+  vim.cmd([[silent! call repeat#set("\<Plug>ISwapWith", -1)]])
 end
 
 return M
