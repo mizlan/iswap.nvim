@@ -49,7 +49,7 @@ require('iswap').setup{
 
   -- Highlight group for the greyed background
   -- default 'Comment'
-  hl_grey = 'LineNr'
+  hl_grey = 'LineNr',
 
   -- Automatically swap with only two arguments
   -- default nil
