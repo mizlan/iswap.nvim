@@ -16,8 +16,8 @@ function M.find(winid)
   -- local root = ts_utils.get_root_for_position(unpack(cursor_range))
   -- NOTE: this root is freshly parsed, but this may not be the best way of getting a fresh parse
   --       see :h Query:iter_captures()
-  local root = vim.treesitter.get_parser(bufnr, ft_to_lang(ft)):parse()[1]:root()
   local ft = vim.bo[bufnr].filetype
+  local root = vim.treesitter.get_parser(bufnr, ft_to_lang(ft)):parse()[1]:root()
   local q = queries.get_query(ft_to_lang(ft), 'iswap-list')
   -- TODO: initialize correctly so that :ISwap is not callable on unsupported
   -- languages, if that's possible.
