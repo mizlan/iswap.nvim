@@ -18,7 +18,7 @@ function M.within(a, b, c)
   return M.compare_position(a, b) and M.compare_position(b, c)
 end
 
-function M.nodes_containing_cursor(node)
+function M.nodes_containing_cursor(node, winid)
   local cursor = vim.api.nvim_win_get_cursor(winid)
   local cursor_range = { cursor[1] - 1, cursor[2] }
   return M.nodes_containing_pos(node, cursor_range)
