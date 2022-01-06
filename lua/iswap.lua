@@ -87,7 +87,7 @@ function M.iswap_with(config)
   -- nothing to swap here
   if #children < 2 then return end
 
-  local cur_nodes = util.nodes_containing_cursor(children)
+  local cur_nodes = util.nodes_containing_cursor(children, winid)
   if #cur_nodes == 0 then
     err('not on a node!', 1)
   end
