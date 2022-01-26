@@ -51,6 +51,10 @@ require('iswap').setup{
   -- default 'Comment'
   hl_grey = 'LineNr',
 
+  -- Highlight priority for the greyed background
+  -- default '1000'
+  hl_grey_priority = '200',
+
   -- Automatically swap with only two arguments
   -- default nil
   autoswap = true
