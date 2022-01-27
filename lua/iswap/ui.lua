@@ -17,8 +17,8 @@ function M.grey_the_rest_out(bufnr, config, begin_exclude, end_exclude)
   local top_line = win_info.topline - 1
   local bot_line = win_info.botline - 1
   M.clear_namespace(bufnr)
-  vim.highlight.range(bufnr, M.argts_ns, config.hl_grey, {top_line, 0}, begin_exclude)
-  vim.highlight.range(bufnr, M.argts_ns, config.hl_grey, end_exclude, {bot_line, -1})
+  vim.highlight.range(bufnr, M.argts_ns, config.hl_grey, {top_line, 0}, begin_exclude, 'v', false, config.hl_grey_priority)
+  vim.highlight.range(bufnr, M.argts_ns, config.hl_grey, end_exclude, {bot_line, -1}, 'v', false, config.hl_grey_priority)
 end
 
 -- Prompt user from NODES a total of TIMES times in BUFNR. CONFIG is used for
