@@ -51,20 +51,15 @@ require('iswap').setup{
   -- default 'Comment'
   hl_grey = 'LineNr',
 
-  -- Highlight priority for the greyed background
-  -- default '1000'
-  hl_grey_priority = '200',
-
   -- Automatically swap with only two arguments
   -- default nil
   autoswap = true
+
+  -- Other default options you probably should not change:
+  debug = nil,
+  hl_grey_priority = '1000',
 }
 ```
 
 inspired by [hop.nvim](https://github.com/phaazon/hop.nvim) and
 [nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects)
-
-## todo
-
-- add angle bracket stuff
-- add docs and stuff
