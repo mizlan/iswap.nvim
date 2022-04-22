@@ -42,7 +42,7 @@ function M.prompt(bufnr, config, nodes, active_range, times)
   for i, node in ipairs(nodes) do
     local key = keys:sub(i, i)
     map[key] = node
-    ts_utils.highlight_node(node, bufnr, M.argts_ns, config.hl_selection)
+    -- ts_utils.highlight_node(node, bufnr, M.argts_ns, config.hl_selection) -- cant see anything with it
     local start_row, start_col = node:range()
     vim.api.nvim_buf_set_extmark(bufnr, M.argts_ns, start_row, start_col,
       { virt_text = { { key, config.hl_snipe } }, virt_text_pos = "overlay", hl_mode = "blend" })

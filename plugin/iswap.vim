@@ -5,6 +5,7 @@ lua require("iswap").init()
 " highlight default link ISwapGrey Comment
 
 command ISwap lua require('iswap').iswap()
+command ISwapNode lua require('iswap').iswap_node()
 command ISwapWith lua require('iswap').iswap_with()
 
 " <Plug>ISwap will delay because it become <Plug>ISwapWith prefix sequences.
