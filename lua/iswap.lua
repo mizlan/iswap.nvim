@@ -71,7 +71,74 @@ function M.iswap(config)
 end
 
 
-function M.iswap_node(config)
+function M.iswap_cursor_node(config, direction)
+  config = M.evaluate_config(config)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local winid = vim.api.nvim_get_current_win()
+
+	local cursor_node = ts_utils.get_node_at_cursor(winid)
+	local current_row, current_col = cursor_node:start()
+
+
+	-- find outer parent :=  its start() is same as cursor_node:start()
+	local last_valid_node = cursor_node
+	local outer_cursor_node = cursor_node:parent()
+	while outer_cursor_node do -- only get parents - for current line
+		local outer_row, outer_col = outer_cursor_node:start()
+		if outer_row ~= current_row or outer_col ~= current_col then -- new outer parent to have same start()
+			break
+		end
+		last_valid_node = outer_cursor_node
+		outer_cursor_node = outer_cursor_node:parent()
+	end
+
+	outer_cursor_node = last_valid_node
+
+	local outer_parent = outer_cursor_node:parent()
+	if outer_parent == nil then
+		err('No siblings found for swap', config.debug)
+		return
+	end
+	local children = ts_utils.get_named_children(outer_parent)
+  local sr, sc, er, ec = outer_parent:range()
+
+  -- nothing to swap here
+  if #children < 2 then return end
+
+	-- a and b are the nodes to swap
+	local swap_node
+
+  if config.autoswap and #children == 2 then -- auto swap outer_cursor_node with other sibling
+		if children[1] == outer_cursor_node then
+			swap_node = children[2]
+		else
+			swap_node = children[1]
+		end
+  else -- draw picker
+		if direction == 'right' then
+			swap_node = outer_cursor_node:next_named_sibling()
+		elseif direction == 'left' then
+			swap_node = outer_cursor_node:prev_named_sibling()
+		else
+			user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
+			if not (type(user_input) == 'table' and #user_input == 1) then
+				err('did not get two valid user inputs', config.debug)
+				return
+			end
+			swap_node = unpack(user_input)
+		end
+  end
+
+  if swap_node == nil then
+    err('picked nill swap node', config.debug)
+    return
+  end
+  ts_utils.swap_nodes(outer_cursor_node, swap_node, bufnr, true)
+
+  vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
+end
+
+function M.iswap_node(config, direction)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
@@ -101,7 +168,7 @@ function M.iswap_node(config)
 		parent = parent:parent()
 	end
 
-	-- pick  cursor_node or any ancestors for swapping
+	-- pick: {cursor_node +  any ancestors} for swapping
 	local dim_exclude_range = {{last_row,0}, {last_row,120}}
 	local user_input = ui.prompt(bufnr, config, ascendants, dim_exclude_range , 1) -- no dim when picking swap_node ?
 	if not (type(user_input) == 'table' and #user_input == 1) then
@@ -127,19 +194,19 @@ function M.iswap_node(config)
 			swap_node = children[1]
 		end
   else -- draw picker
-    user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
-    if not (type(user_input) == 'table' and #user_input == 1) then
-      err('did not get two valid user inputs', config.debug)
-      return
-    end
-    swap_node = unpack(user_input)
+		user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
+		if not (type(user_input) == 'table' and #user_input == 1) then
+			err('did not get two valid user inputs', config.debug)
+			return
+		end
+		swap_node = unpack(user_input)
   end
 
   if swap_node == nil then
     err('picked nill swap node', config.debug)
     return
   end
-  ts_utils.swap_nodes(picked_node, swap_node, bufnr)
+  ts_utils.swap_nodes(picked_node, swap_node, bufnr, true)
 
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
 end
