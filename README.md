@@ -53,7 +53,7 @@ require('iswap').setup{
 
   -- Automatically swap with only two arguments
   -- default nil
-  autoswap = true
+  autoswap = true,
 
   -- Other default options you probably should not change:
   debug = nil,
