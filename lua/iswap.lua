@@ -79,7 +79,6 @@ function M.iswap_cursor_node(config, direction)
 	local cursor_node = ts_utils.get_node_at_cursor(winid)
 	local current_row, current_col = cursor_node:start()
 
-
 	-- find outer parent :=  its start() is same as cursor_node:start()
 	local last_valid_node = cursor_node
 	local outer_cursor_node = cursor_node:parent()
@@ -88,7 +87,9 @@ function M.iswap_cursor_node(config, direction)
 		if outer_row ~= current_row or outer_col ~= current_col then -- new outer parent to have same start()
 			break
 		end
-		last_valid_node = outer_cursor_node
+		if outer_cursor_node:next_named_sibling() ~= nil or outer_cursor_node:prev_named_sibling() ~= nil then -- ignore no sibling node
+			last_valid_node = outer_cursor_node
+		end
 		outer_cursor_node = outer_cursor_node:parent()
 	end
 
@@ -117,8 +118,14 @@ function M.iswap_cursor_node(config, direction)
   else -- draw picker
 		if direction == 'right' then
 			swap_node = outer_cursor_node:next_named_sibling()
+			while swap_node:type() == "comment" do
+				swap_node = swap_node:next_named_sibling()
+			end
 		elseif direction == 'left' then
 			swap_node = outer_cursor_node:prev_named_sibling()
+			while swap_node:type() == "comment" do
+				swap_node = swap_node:prev_named_sibling()
+			end
 		else
 			user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
 			if not (type(user_input) == 'table' and #user_input == 1) then
@@ -168,6 +175,21 @@ function M.iswap_node(config, direction)
 		parent = parent:parent()
 	end
 
+	-- remove ascendant node tha has no siblings
+	for i = #ascendants, 1, -1 do
+		local ascendant = ascendants[i]
+		if ascendant:type() == "comment" then
+			table.remove(ascendants, i)
+		elseif ascendant:next_named_sibling() == nil and ascendant:prev_named_sibling() == nil then
+			table.remove(ascendants, i)
+		end
+	end
+
+	if #ascendants == 0 then
+		err('No proper node with siblings found to swap', config.debug)
+		return
+	end
+
 	-- pick: {cursor_node +  any ancestors} for swapping
 	local dim_exclude_range = {{last_row,0}, {last_row,120}}
 	local user_input = ui.prompt(bufnr, config, ascendants, dim_exclude_range , 1) -- no dim when picking swap_node ?
@@ -180,6 +202,13 @@ function M.iswap_node(config, direction)
 	local picked_parent = picked_node:parent()
   local children = ts_utils.get_named_children(picked_parent)
   local sr, sc, er, ec = picked_parent:range()
+
+	-- remove children if child:type() == "comment"
+	for i = #children, 1, -1 do
+		if children[i]:type() == "comment" then
+			table.remove(children, i)
+		end
+	end
 
   -- nothing to swap here
   if #children < 2 then return end
