@@ -160,30 +160,35 @@ function M.iswap_node(config, direction)
 
 	-- pick parent recursive for current line
 	local ascendants = {cur_node}
+	local prev_parent = cur_node
 	local current_row = parent:start()
 	local last_row, last_col
 	while parent and parent:start() == current_row do -- only get parents - for current line
-		last_row, last_col = ascendants[#ascendants]:start()
+		last_row, last_col = prev_parent:start()
 		local s_row, s_col = parent:start()
 		if last_row == s_row and last_col == s_col then -- new parent has same start as last one. Override last one
-			ascendants[#ascendants] = parent
+			-- ignore  no sibling or  comment nodes
+			if not (parent:next_named_sibling() == nil and parent:prev_named_sibling() == nil) and parent:type() ~= "comment" then
+				ascendants[#ascendants] = parent
+			end
 		else
 			table.insert(ascendants, parent)
 			last_row = s_row
 			last_col = s_col
 		end
+		prev_parent = parent
 		parent = parent:parent()
 	end
 
 	-- remove ascendant node tha has no siblings
-	for i = #ascendants, 1, -1 do
-		local ascendant = ascendants[i]
-		if ascendant:type() == "comment" then
-			table.remove(ascendants, i)
-		elseif ascendant:next_named_sibling() == nil and ascendant:prev_named_sibling() == nil then
-			table.remove(ascendants, i)
-		end
-	end
+	-- for i = #ascendants, 1, -1 do
+	-- 	local ascendant = ascendants[i]
+	-- 	if ascendant:type() == "comment" then
+	-- 		table.remove(ascendants, i)
+	-- 	elseif ascendant:next_named_sibling() == nil and ascendant:prev_named_sibling() == nil then
+	-- 		table.remove(ascendants, i)
+	-- 	end
+	-- end
 
 	if #ascendants == 0 then
 		err('No proper node with siblings found to swap', config.debug)
