@@ -11,6 +11,7 @@ local M = {}
 M.config = default_config
 
 function M.setup(config)
+  config = config or nil
   M.config = setmetatable(config, { __index = default_config })
 end
 
