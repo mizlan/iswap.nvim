@@ -160,7 +160,7 @@ function M.iswap_node(config, direction)
   end
 
   -- pick parent recursive for current line
-  local ascendants = {cur_node}
+  local ancestors = { cur_node }
   local prev_parent = cur_node
   local current_row = parent:start()
   local last_row, last_col
@@ -170,10 +170,10 @@ function M.iswap_node(config, direction)
     if last_row == s_row and last_col == s_col then -- new parent has same start as last one. Override last one
       -- ignore  no sibling or  comment nodes
       if not (parent:next_named_sibling() == nil and parent:prev_named_sibling() == nil) and parent:type() ~= "comment" then
-        ascendants[#ascendants] = parent
+        ancestors[#ancestors] = parent
       end
     else
-      table.insert(ascendants, parent)
+      table.insert(ancestors, parent)
       last_row = s_row
       last_col = s_col
     end
@@ -181,24 +181,24 @@ function M.iswap_node(config, direction)
     parent = parent:parent()
   end
 
-  -- remove ascendant node tha has no siblings
-  -- for i = #ascendants, 1, -1 do
-  --   local ascendant = ascendants[i]
-  --   if ascendant:type() == "comment" then
-  --     table.remove(ascendants, i)
-  --   elseif ascendant:next_named_sibling() == nil and ascendant:prev_named_sibling() == nil then
-  --     table.remove(ascendants, i)
+  -- remove ancestor node tha has no siblings
+  -- for i = #ancestors, 1, -1 do
+  --   local ancestor = ancestors[i]
+  --   if ancestor:type() == "comment" then
+  --     table.remove(ancestors, i)
+  --   elseif ancestor:next_named_sibling() == nil and ancestor:prev_named_sibling() == nil then
+  --     table.remove(ancestors, i)
   --   end
   -- end
 
-  if #ascendants == 0 then
+  if #ancestors == 0 then
     err('No proper node with siblings found to swap', config.debug)
     return
   end
 
   -- pick: {cursor_node +  any ancestors} for swapping
   local dim_exclude_range = {{last_row,0}, {last_row,120}}
-  local user_input = ui.prompt(bufnr, config, ascendants, dim_exclude_range , 1) -- no dim when picking swap_node ?
+  local user_input = ui.prompt(bufnr, config, ancestors, dim_exclude_range , 1) -- no dim when picking swap_node ?
   if not (type(user_input) == 'table' and #user_input == 1) then
     err('did not get two valid user inputs', config.debug)
     return
