@@ -52,6 +52,83 @@ function M.get_list_node_at_cursor(winid, config)
   return ret
 end
 
+
+local function private_ts_utils_get_node_text(node, bufnr)
+  local bufnr = bufnr or vim.api.nvim_get_current_buf()
+  if not node then
+    return {}
+  end
+
+  -- We have to remember that end_col is end-exclusive
+  local start_row, start_col, end_row, end_col = ts_utils.get_node_range(node)
+
+  if start_row ~= end_row then
+    local lines = vim.api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
+    lines[1] = string.sub(lines[1], start_col + 1)
+    -- end_row might be just after the last line. In this case the last line is not truncated.
+    if #lines == end_row - start_row + 1 then
+      lines[#lines] = string.sub(lines[#lines], 1, end_col)
+    end
+    return lines
+  else
+    local line = vim.api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, false)[1]
+    -- If line is nil then the line is empty
+    return line and { string.sub(line, start_col + 1, end_col) } or {}
+  end
+end
+
+function M.swap_nodes_and_return_new_ranges(a, b, bufnr)
+  local range1 = ts_utils.node_to_lsp_range(a)
+  local range2 = ts_utils.node_to_lsp_range(b)
+
+  local text1 = private_ts_utils_get_node_text(a, bufnr)
+  local text2 = private_ts_utils_get_node_text(b, bufnr)
+
+  ts_utils.swap_nodes(a, b, bufnr)
+
+  local char_delta = 0
+  local line_delta = 0
+  if
+    range1["end"].line < range2.start.line
+    or (range1["end"].line == range2.start.line and range1["end"].character < range2.start.character)
+  then
+    line_delta = #text2 - #text1
+  end
+
+  if range1["end"].line == range2.start.line and range1["end"].character < range2.start.character then
+    if line_delta ~= 0 then
+      --- why?
+      --correction_after_line_change =  -range2.start.character
+      --text_now_before_range2 = #(text2[#text2])
+      --space_between_ranges = range2.start.character - range1["end"].character
+      --char_delta = correction_after_line_change + text_now_before_range2 + space_between_ranges
+      --- Equivalent to:
+      char_delta = #text2[#text2] - range1["end"].character
+
+      -- add range1.start.character if last line of range1 (now text2) does not start at 0
+      if range1.start.line == range2.start.line + line_delta then
+        char_delta = char_delta + range1.start.character
+      end
+    else
+      char_delta = #text2[#text2] - #text1[#text1]
+    end
+  end
+
+  -- now let a = first one (text2), b = second one (text1)
+  -- (opposite of what it used to be)
+
+  local a_sr = range1.start.line
+  local a_sc = range1.start.character
+  local a_er = a_sr + #text2 - 1
+  local a_ec = (#text2 > 1) and #text2[#text2] or a_sc + #text2[#text2]
+  local b_sr = range2.start.line + line_delta
+  local b_sc = range2.start.character + char_delta
+  local b_er = b_sr + #text1 - 1
+  local b_ec = (#text1 > 1) and #text1[#text1] or b_sc + #text1[#text1]
+
+  return { {a_sr, a_sc, a_er, a_ec}, {b_sr, b_sc, b_er, b_ec} }
+end
+
 function M.attach(bufnr, lang)
   -- TODO: Fill this with what you need to do when attaching to a buffer
 end
