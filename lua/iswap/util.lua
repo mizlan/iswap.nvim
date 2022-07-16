@@ -12,6 +12,12 @@ function M.tbl_reverse(tbl)
   end
 end
 
+function M.tbl_pack(...)
+  local t = {...}
+  t.n = #t
+  return t
+end
+
 function M.compare_position(a, b)
   if a[1] == b[1] then
     return a[2] <= b[2]
