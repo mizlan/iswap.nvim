@@ -88,7 +88,7 @@ function M.iswap_node_with(direction, config)
     if outer_row ~= current_row or outer_col ~= current_col then -- new outer parent to have same start()
       break
     end
-    if outer_cursor_node:next_named_sibling() ~= nil or outer_cursor_node:prev_named_sibling() ~= nil then -- ignore no sibling node
+    if util.has_siblings(outer_cursor_node) then
       last_valid_node = outer_cursor_node
     end
     outer_cursor_node = outer_cursor_node:parent()
@@ -119,12 +119,12 @@ function M.iswap_node_with(direction, config)
   else -- draw picker
     if direction == 'right' then
       swap_node = outer_cursor_node:next_named_sibling()
-      while swap_node:type() == "comment" do
+      while swap_node:type() == 'comment' do
         swap_node = swap_node:next_named_sibling()
       end
     elseif direction == 'left' then
       swap_node = outer_cursor_node:prev_named_sibling()
-      while swap_node:type() == "comment" do
+      while swap_node:type() == 'comment' do
         swap_node = swap_node:prev_named_sibling()
       end
     else
@@ -167,9 +167,12 @@ function M.iswap_node(config, direction)
   while parent and parent:start() == current_row do -- only get parents - for current line
     last_row, last_col = prev_parent:start()
     local s_row, s_col = parent:start()
-    if last_row == s_row and last_col == s_col then -- new parent has same start as last one. Override last one
-      -- ignore  no sibling or  comment nodes
-      if not (parent:next_named_sibling() == nil and parent:prev_named_sibling() == nil) and parent:type() ~= "comment" then
+
+    if last_row == s_row and last_col == s_col then
+    -- new parent has same start as last one. Override last one
+      if util.has_siblings(parent) and parent:type() ~= 'comment' then
+        -- only add if it has >0 siblings and is not comment node
+        -- (override previous since same start position)
         ancestors[#ancestors] = parent
       end
     else
@@ -209,9 +212,9 @@ function M.iswap_node(config, direction)
   local children = ts_utils.get_named_children(picked_parent)
   local sr, sc, er, ec = picked_parent:range()
 
-  -- remove children if child:type() == "comment"
+  -- remove children if child:type() == 'comment'
   for i = #children, 1, -1 do
-    if children[i]:type() == "comment" then
+    if children[i]:type() == 'comment' then
       table.remove(children, i)
     end
   end
