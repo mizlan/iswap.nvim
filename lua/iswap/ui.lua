@@ -63,8 +63,6 @@ end
 -- { startrow, startcol, endrow, endcol }
 function M.flash_confirm_simul(bufnr, ranges, config)
   M.clear_namespace(bufnr)
-  -- TODO add option
-  config.hl_flash = 'ModeMsg'
   for _, range in ipairs(ranges) do
     local sr, sc, er, ec = unpack(range)
     vim.highlight.range(bufnr, M.iswap_ns, config.hl_flash, {sr, sc}, {er, ec}, 'v', false)
@@ -90,7 +88,7 @@ function M.flash_confirm_sequential(bufnr, ranges, config)
       function()
         helper(idx + 1)
       end,
-      350
+      300
     )
   end
   helper(1)
