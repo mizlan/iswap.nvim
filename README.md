@@ -4,7 +4,8 @@ Interactively select and swap: function arguments, list elements, function
 parameters, and more. Powered by tree-sitter.
 
 ![prehistoric iswap demo](./assets/better_demo.gif)
-![modern iswap demo](./assets/iswap_flash_highlight_demo.mov)
+
+https://github.com/mizlan/iswap.nvim/blob/7ffe90fd243b14055d1ab4ef1933f2a7afbdb0fe/assets/iswap_flash_highlight_demo.mov
 
 ## installation
 
