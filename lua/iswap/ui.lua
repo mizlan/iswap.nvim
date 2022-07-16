@@ -80,4 +80,22 @@ function M.flash_confirm_simul(bufnr, ranges, config)
   )
 end
 
+function M.flash_confirm_sequential(bufnr, ranges, config)
+  -- TODO add option
+  function helper(idx)
+    M.clear_namespace(bufnr)
+    if idx > #ranges then return end
+    local sr, sc, er, ec = unpack(ranges[idx])
+    err(string.format("%d %d %d %d", sr, sc, er, ec), true)
+    vim.highlight.range(bufnr, M.iswap_ns, config.hl_flash, {sr, sc}, {er, ec}, 'v', false)
+    vim.defer_fn(
+      function()
+        helper(idx + 1)
+      end,
+      200
+    )
+  end
+  helper(1)
+end
+
 return M
