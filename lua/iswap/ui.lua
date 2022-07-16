@@ -59,4 +59,25 @@ function M.prompt(bufnr, config, nodes, active_range, times)
   return res
 end
 
+-- RANGES is a list of RANGE where RANGE is like
+-- { startrow, startcol, endrow, endcol }
+function M.flash_confirm_simul(bufnr, ranges, config)
+  M.clear_namespace(bufnr)
+  -- TODO add option
+  config.hl_flash = 'ModeMsg'
+  for _, range in ipairs(ranges) do
+    local sr, sc, er, ec = unpack(range)
+    vim.highlight.range(bufnr, M.iswap_ns, config.hl_flash, {sr, sc}, {er, ec}, 'v', false)
+  end
+
+  vim.defer_fn(
+    function()
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        M.clear_namespace(bufnr)
+      end
+    end,
+    250
+  )
+end
+
 return M
