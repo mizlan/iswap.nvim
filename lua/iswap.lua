@@ -146,7 +146,12 @@ function M.iswap_node_with(direction, config)
     err('picked nil swap node', config.debug)
     return
   end
-  ts_utils.swap_nodes(outer_cursor_node, swap_node, bufnr, true)
+
+  local a_range, b_range = unpack(
+    internal.swap_nodes_and_return_new_ranges(outer_cursor_node, swap_node, bufnr, true)
+  )
+
+  ui.flash_confirm_sequential(bufnr, { a_range, b_range }, config)
 
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
 end
@@ -305,7 +310,12 @@ function M.iswap_with(config)
     err('the node was nil', config.debug)
     return
   end
-  ts_utils.swap_nodes(a, cur_node, bufnr, true)
+
+  local a_range, b_range = unpack(
+    internal.swap_nodes_and_return_new_ranges(a, cur_node, bufnr, true)
+  )
+
+  ui.flash_confirm_sequential(bufnr, { a_range, b_range }, config)
 
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapWith", -1)]])
 end
