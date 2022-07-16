@@ -6,6 +6,12 @@ function M.err(msg, flag)
   end
 end
 
+function M.tbl_reverse(tbl)
+  for i=1, math.floor(#tbl / 2) do
+    tbl[i], tbl[#tbl - i + 1] = tbl[#tbl - i + 1], tbl[i]
+  end
+end
+
 function M.compare_position(a, b)
   if a[1] == b[1] then
     return a[2] <= b[2]
@@ -40,6 +46,10 @@ function M.nodes_containing_pos(nodes, pos)
     end
   end
   return idxs
+end
+
+function M.has_siblings(node)
+  return node:next_named_sibling() ~= nil or node:prev_named_sibling() ~= nil
 end
 
 function M.getchar_handler()
