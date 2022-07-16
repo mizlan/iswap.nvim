@@ -3,7 +3,8 @@
 Interactively select and swap: function arguments, list elements, function
 parameters, and more. Powered by tree-sitter.
 
-![iswap demo](./assets/better_demo.gif)
+![prehistoric iswap demo](./assets/better_demo.gif)
+![modern iswap demo](./assets/iswap_flash_highlight_demo.mov)
 
 ## installation
 
@@ -50,6 +51,10 @@ require('iswap').setup{
   -- Highlight group for the greyed background
   -- default 'Comment'
   hl_grey = 'LineNr',
+
+  -- Highlight group for flashing highlight afterward
+  -- default 'IncSearch', nil to disable
+  hl_flash = 'ModeMsg',
 
   -- Automatically swap with only two arguments
   -- default nil
