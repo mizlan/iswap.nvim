@@ -71,7 +71,11 @@ function M.iswap(config)
     internal.swap_nodes_and_return_new_ranges(a, b, bufnr, true)
   )
 
-  ui.flash_confirm_sequential(bufnr, { a_range, b_range }, config)
+  if config.flash_style == 'simultaneous' then
+    ui.flash_confirm_simul(bufnr, { a_range, b_range }, config)
+  elseif config.flash_style == 'sequential' then
+    ui.flash_confirm_sequential(bufnr, { a_range, b_range }, config)
+  end
 
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
 end
@@ -151,7 +155,11 @@ function M.iswap_node_with(direction, config)
     internal.swap_nodes_and_return_new_ranges(outer_cursor_node, swap_node, bufnr, true)
   )
 
-  ui.flash_confirm_sequential(bufnr, { a_range, b_range }, config)
+  if config.flash_style == 'simultaneous' then
+    ui.flash_confirm_simul(bufnr, { a_range, b_range }, config)
+  elseif config.flash_style == 'sequential' then
+    ui.flash_confirm_sequential(bufnr, { a_range, b_range }, config)
+  end
 
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
 end
@@ -253,7 +261,11 @@ function M.iswap_node(config, direction)
     internal.swap_nodes_and_return_new_ranges(picked_node, swap_node, bufnr, true)
   )
 
-  ui.flash_confirm_sequential(bufnr, { a_range, b_range }, config)
+  if config.flash_style == 'simultaneous' then
+    ui.flash_confirm_simul(bufnr, { a_range, b_range }, config)
+  elseif config.flash_style == 'sequential' then
+    ui.flash_confirm_sequential(bufnr, { a_range, b_range }, config)
+  end
 
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
 end
@@ -315,7 +327,11 @@ function M.iswap_with(config)
     internal.swap_nodes_and_return_new_ranges(a, cur_node, bufnr, true)
   )
 
-  ui.flash_confirm_sequential(bufnr, { a_range, b_range }, config)
+  if config.flash_style == 'simultaneous' then
+    ui.flash_confirm_simul(bufnr, { a_range, b_range }, config)
+  elseif config.flash_style == 'sequential' then
+    ui.flash_confirm_sequential(bufnr, { a_range, b_range }, config)
+  end
 
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapWith", -1)]])
 end
