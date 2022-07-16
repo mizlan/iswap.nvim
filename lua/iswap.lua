@@ -138,7 +138,7 @@ function M.iswap_node_with(direction, config)
   end
 
   if swap_node == nil then
-    err('picked nill swap node', config.debug)
+    err('picked nil swap node', config.debug)
     return
   end
   ts_utils.swap_nodes(outer_cursor_node, swap_node, bufnr, true)
@@ -164,7 +164,9 @@ function M.iswap_node(config, direction)
   local prev_parent = cur_node
   local current_row = parent:start()
   local last_row, last_col
-  while parent and parent:start() == current_row do -- only get parents - for current line
+
+  -- only get parents - for current line
+  while parent and parent:start() == current_row do
     last_row, last_col = prev_parent:start()
     local s_row, s_col = parent:start()
 
@@ -184,15 +186,8 @@ function M.iswap_node(config, direction)
     parent = parent:parent()
   end
 
-  -- remove ancestor node tha has no siblings
-  -- for i = #ancestors, 1, -1 do
-  --   local ancestor = ancestors[i]
-  --   if ancestor:type() == "comment" then
-  --     table.remove(ancestors, i)
-  --   elseif ancestor:next_named_sibling() == nil and ancestor:prev_named_sibling() == nil then
-  --     table.remove(ancestors, i)
-  --   end
-  -- end
+  -- in left-to-right order for generating hints
+  util.tbl_reverse(ancestors)
 
   if #ancestors == 0 then
     err('No proper node with siblings found to swap', config.debug)
@@ -200,7 +195,7 @@ function M.iswap_node(config, direction)
   end
 
   -- pick: {cursor_node +  any ancestors} for swapping
-  local dim_exclude_range = {{last_row,0}, {last_row,120}}
+  local dim_exclude_range = {{last_row, 0}, {last_row, 120}}
   local user_input = ui.prompt(bufnr, config, ancestors, dim_exclude_range , 1) -- no dim when picking swap_node ?
   if not (type(user_input) == 'table' and #user_input == 1) then
     err('did not get two valid user inputs', config.debug)
@@ -222,7 +217,6 @@ function M.iswap_node(config, direction)
   -- nothing to swap here
   if #children < 2 then return end
 
-  -- a and b are the nodes to swap
   local swap_node
 
   if config.autoswap and #children == 2 then -- auto swap picked_node with other sibling
@@ -241,7 +235,7 @@ function M.iswap_node(config, direction)
   end
 
   if swap_node == nil then
-    err('picked nill swap node', config.debug)
+    err('picked nil swap node', config.debug)
     return
   end
   ts_utils.swap_nodes(picked_node, swap_node, bufnr, true)
