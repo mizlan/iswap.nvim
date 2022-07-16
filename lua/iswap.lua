@@ -72,7 +72,7 @@ function M.iswap(config)
 end
 
 
-function M.iswap_cursor_node(config, direction)
+function M.iswap_node_with(direction, config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
