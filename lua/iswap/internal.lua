@@ -78,6 +78,16 @@ local function private_ts_utils_get_node_text(node, bufnr)
 end
 
 function M.swap_nodes_and_return_new_ranges(a, b, bufnr)
+  local a_sr, a_sc = a:range()
+  local b_sr, b_sc = b:range()
+
+  -- [1] first appearing node should be `a`, so swap for convenience
+  local HAS_SWAPPED = false
+  if not util.compare_position({a_sr, a_sc}, {b_sr, b_sc}) then
+    a, b = b, a
+    HAS_SWAPPED = true
+  end
+
   local range1 = ts_utils.node_to_lsp_range(a)
   local range2 = ts_utils.node_to_lsp_range(b)
 
@@ -126,7 +136,15 @@ function M.swap_nodes_and_return_new_ranges(a, b, bufnr)
   local b_er = b_sr + #text1 - 1
   local b_ec = (#text1 > 1) and #text1[#text1] or b_sc + #text1[#text1]
 
-  return { {a_sr, a_sc, a_er, a_ec}, {b_sr, b_sc, b_er, b_ec} }
+  local a_data = { a_sr, a_sc, a_er, a_ec }
+  local b_data = { b_sr, b_sc, b_er, b_ec }
+
+  -- undo [1]'s swapping
+  if HAS_SWAPPED then
+    a_data, b_data = b_data, a_data
+  end
+
+  return { a_data, b_data }
 end
 
 function M.attach(bufnr, lang)
