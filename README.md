@@ -52,8 +52,13 @@ require('iswap').setup{
   -- default 'Comment'
   hl_grey = 'LineNr',
 
+  -- Post-operation flashing highlight style,
+  -- either 'simultaneous' or 'sequential', or nil to disable
+  -- default 'sequential'
+  flash_style = 'sequential',
+
   -- Highlight group for flashing highlight afterward
-  -- default 'IncSearch', nil to disable
+  -- default 'IncSearch'
   hl_flash = 'ModeMsg',
 
   -- Automatically swap with only two arguments
