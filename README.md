@@ -5,7 +5,7 @@ parameters, and more. Powered by tree-sitter.
 
 ![prehistoric iswap demo](./assets/better_demo.gif)
 
-https://github.com/mizlan/iswap.nvim/blob/7ffe90fd243b14055d1ab4ef1933f2a7afbdb0fe/assets/iswap_flash_highlight_demo.mov
+https://user-images.githubusercontent.com/44309097/179374981-b5cc59a9-6922-496f-9559-3b6be51893e1.mov
 
 ## installation
 
