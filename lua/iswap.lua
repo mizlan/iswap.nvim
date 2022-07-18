@@ -128,12 +128,12 @@ function M.iswap_node_with(direction, config)
   else -- draw picker
     if direction == 'right' then
       swap_node = outer_cursor_node:next_named_sibling()
-      while swap_node:type() == 'comment' do
+      while swap_node ~= nil and swap_node:type() == 'comment' do
         swap_node = swap_node:next_named_sibling()
       end
     elseif direction == 'left' then
       swap_node = outer_cursor_node:prev_named_sibling()
-      while swap_node:type() == 'comment' do
+      while swap_node ~= nil and swap_node:type() == 'comment' do
         swap_node = swap_node:prev_named_sibling()
       end
     else
@@ -147,7 +147,7 @@ function M.iswap_node_with(direction, config)
   end
 
   if swap_node == nil then
-    err('picked nil swap node', config.debug)
+    err('no node to swap with', config.debug)
     return
   end
 
