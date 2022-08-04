@@ -54,7 +54,7 @@ require('iswap').setup{
   hl_grey = 'LineNr',
 
   -- Post-operation flashing highlight style,
-  -- either 'simultaneous' or 'sequential', or nil to disable
+  -- either 'simultaneous' or 'sequential', or 'none' to disable
   -- default 'sequential'
   flash_style = 'sequential',
 
