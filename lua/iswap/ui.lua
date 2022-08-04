@@ -94,4 +94,12 @@ function M.flash_confirm_sequential(bufnr, ranges, config)
   helper(1)
 end
 
+function M.flash_confirm(bufnr, ranges, config)
+  if config.flash_style == 'simultaneous' then
+    M.flash_confirm_simul(bufnr, ranges, config)
+  elseif config.flash_style == 'sequential' then
+    M.flash_confirm_sequential(bufnr, ranges, config)
+  end
+end
+
 return M
