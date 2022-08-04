@@ -54,9 +54,9 @@ require('iswap').setup{
   hl_grey = 'LineNr',
 
   -- Post-operation flashing highlight style,
-  -- either 'simultaneous' or 'sequential', or 'none' to disable
+  -- either 'simultaneous' or 'sequential', or false to disable
   -- default 'sequential'
-  flash_style = 'sequential',
+  flash_style = false,
 
   -- Highlight group for flashing highlight afterward
   -- default 'IncSearch'
