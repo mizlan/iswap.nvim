@@ -144,7 +144,7 @@ function M.swap_nodes_and_return_new_ranges(a, b, bufnr, should_move_cursor)
   end
 
   if should_move_cursor then
-    vim.api.nvim_win_set_cursor(vim.api.nvim_get_current_win(), { b_sr + 1, b_sc })
+    vim.api.nvim_win_set_cursor(vim.api.nvim_get_current_win(), { b_data[1] + 1, b_data[2] })
   end
 
   return { a_data, b_data }
