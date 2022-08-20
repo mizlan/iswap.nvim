@@ -3,9 +3,7 @@
 Interactively select and swap: function arguments, list elements, function
 parameters, and more. Powered by tree-sitter.
 
-![prehistoric iswap demo](./assets/better_demo.gif)
-
-https://user-images.githubusercontent.com/44309097/179374981-b5cc59a9-6922-496f-9559-3b6be51893e1.mov
+https://user-images.githubusercontent.com/44309097/185752788-6e9defdd-7d19-4700-9b7d-e5bc5d95b0d2.mov
 
 ## installation
 
