@@ -62,6 +62,10 @@ require('iswap').setup{
   -- default 'IncSearch'
   hl_flash = 'ModeMsg',
 
+  -- Move cursor to the other element in ISwap*With commands
+  -- default false
+  move_cursor = true,
+
   -- Automatically swap with only two arguments
   -- default nil
   autoswap = true,
