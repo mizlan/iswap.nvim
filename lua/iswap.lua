@@ -68,7 +68,7 @@ function M.iswap(config)
   end
 
   local a_range, b_range = unpack(
-    internal.swap_nodes_and_return_new_ranges(a, b, bufnr, true)
+    internal.swap_nodes_and_return_new_ranges(a, b, bufnr, false)
   )
 
   ui.flash_confirm(bufnr, { a_range, b_range }, config)
@@ -148,7 +148,7 @@ function M.iswap_node_with(direction, config)
   end
 
   local a_range, b_range = unpack(
-    internal.swap_nodes_and_return_new_ranges(outer_cursor_node, swap_node, bufnr, true)
+    internal.swap_nodes_and_return_new_ranges(outer_cursor_node, swap_node, bufnr, config.move_cursor)
   )
 
   ui.flash_confirm(bufnr, { a_range, b_range }, config)
@@ -250,7 +250,7 @@ function M.iswap_node(config, direction)
   end
 
   local a_range, b_range = unpack(
-    internal.swap_nodes_and_return_new_ranges(picked_node, swap_node, bufnr, true)
+    internal.swap_nodes_and_return_new_ranges(picked_node, swap_node, bufnr, false)
   )
 
   ui.flash_confirm(bufnr, { a_range, b_range }, config)
@@ -312,7 +312,7 @@ function M.iswap_with(config)
   end
 
   local a_range, b_range = unpack(
-    internal.swap_nodes_and_return_new_ranges(a, cur_node, bufnr, true)
+    internal.swap_nodes_and_return_new_ranges(cur_node, a, bufnr, config.move_cursor)
   )
 
   ui.flash_confirm(bufnr, { a_range, b_range }, config)

@@ -52,7 +52,6 @@ function M.get_list_node_at_cursor(winid, config)
   return ret
 end
 
-
 local function private_ts_utils_get_node_text(node, bufnr)
   local bufnr = bufnr or vim.api.nvim_get_current_buf()
   if not node then
@@ -77,13 +76,14 @@ local function private_ts_utils_get_node_text(node, bufnr)
   end
 end
 
-function M.swap_nodes_and_return_new_ranges(a, b, bufnr)
+-- node 'a' is the one the cursor is on
+function M.swap_nodes_and_return_new_ranges(a, b, bufnr, should_move_cursor)
   local a_sr, a_sc = a:range()
   local b_sr, b_sc = b:range()
 
   -- [1] first appearing node should be `a`, so swap for convenience
   local HAS_SWAPPED = false
-  if not util.compare_position({a_sr, a_sc}, {b_sr, b_sc}) then
+  if not util.compare_position({ a_sr, a_sc }, { b_sr, b_sc }) then
     a, b = b, a
     HAS_SWAPPED = true
   end
@@ -98,9 +98,8 @@ function M.swap_nodes_and_return_new_ranges(a, b, bufnr)
 
   local char_delta = 0
   local line_delta = 0
-  if
-    range1["end"].line < range2.start.line
-    or (range1["end"].line == range2.start.line and range1["end"].character < range2.start.character)
+  if range1["end"].line < range2.start.line
+      or (range1["end"].line == range2.start.line and range1["end"].character < range2.start.character)
   then
     line_delta = #text2 - #text1
   end
@@ -142,6 +141,10 @@ function M.swap_nodes_and_return_new_ranges(a, b, bufnr)
   -- undo [1]'s swapping
   if HAS_SWAPPED then
     a_data, b_data = b_data, a_data
+  end
+
+  if should_move_cursor then
+    vim.api.nvim_win_set_cursor(vim.api.nvim_get_current_win(), { b_sr + 1, b_sc })
   end
 
   return { a_data, b_data }
