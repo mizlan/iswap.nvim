@@ -1,5 +1,8 @@
 # iswap.nvim
 
+> ⚠️  If you're getting an error updating this repository, **delete it, and
+> install it again**! See #58 for details.
+
 Interactively select and swap: function arguments, list elements, function
 parameters, and more. Powered by tree-sitter.
 
