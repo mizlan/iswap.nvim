@@ -6,6 +6,8 @@ lua require("iswap").init()
 
 command ISwap lua require('iswap').iswap()
 command ISwapWith lua require('iswap').iswap_with()
+command ISwapWithRight lua require('iswap').iswap_with('right')
+command ISwapWithLeft lua require('iswap').iswap_with('left')
 command ISwapNode lua require('iswap').iswap_node()
 command ISwapNodeWith lua require('iswap').iswap_node_with()
 command ISwapNodeWithRight lua require('iswap').iswap_node_with('right')
