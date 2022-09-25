@@ -261,7 +261,7 @@ end
 
 -- TODO: refactor iswap() and iswap_with()
 -- swap current with one other node
-function M.iswap_with(config)
+function M.iswap_with(direction, config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
@@ -298,12 +298,19 @@ function M.iswap_with(config)
   if config.autoswap and #children == 1 then
     a = children[1]
   else
-    local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
-    if not (type(user_input) == 'table' and #user_input == 1) then
-      err('did not get a valid user input', config.debug)
-      return
+    if direction == 'left' then
+      a = children[cur_nodes[1] - 1]
+    elseif direction == 'right' then
+      -- already shifted over, no need for +1
+      a = children[cur_nodes[1]]
+    else
+      local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
+      if not (type(user_input) == 'table' and #user_input == 1) then
+        err('did not get a valid user input', config.debug)
+        return
+      end
+      a = unpack(user_input)
     end
-    a = unpack(user_input)
   end
 
   if a == nil then
