@@ -16,7 +16,7 @@ function M.setup(config)
 end
 
 function M.evaluate_config(config)
-  return config and setmetatable(config, { __index = M.config }) or M.config
+  return config and setmetatable(config, {__index = M.config}) or M.config
 end
 
 function M.init()
@@ -54,7 +54,7 @@ function M.iswap(config)
   if config.autoswap and #children == 2 then
     a, b = unpack(children)
   else
-    local user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 2)
+    local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 2)
     if not (type(user_input) == 'table' and #user_input == 2) then
       err('did not get two valid user inputs', config.debug)
       return
@@ -75,6 +75,7 @@ function M.iswap(config)
 
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
 end
+
 
 function M.iswap_node_with(direction, config)
   config = M.evaluate_config(config)
@@ -132,7 +133,7 @@ function M.iswap_node_with(direction, config)
         swap_node = swap_node:prev_named_sibling()
       end
     else
-      user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
+      user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
       if not (type(user_input) == 'table' and #user_input == 1) then
         err('did not get two valid user inputs', config.debug)
         return
@@ -180,7 +181,7 @@ function M.iswap_node(config, direction)
     local s_row, s_col = parent:start()
 
     if last_row == s_row and last_col == s_col then
-      -- new parent has same start as last one. Override last one
+    -- new parent has same start as last one. Override last one
       if util.has_siblings(parent) and parent:type() ~= 'comment' then
         -- only add if it has >0 siblings and is not comment node
         -- (override previous since same start position)
@@ -204,8 +205,8 @@ function M.iswap_node(config, direction)
   end
 
   -- pick: {cursor_node +  any ancestors} for swapping
-  local dim_exclude_range = { { last_row, 0 }, { last_row, 120 } }
-  local user_input = ui.prompt(bufnr, config, ancestors, dim_exclude_range, 1) -- no dim when picking swap_node ?
+  local dim_exclude_range = {{last_row, 0}, {last_row, 120}}
+  local user_input = ui.prompt(bufnr, config, ancestors, dim_exclude_range , 1) -- no dim when picking swap_node ?
   if not (type(user_input) == 'table' and #user_input == 1) then
     err('did not get two valid user inputs', config.debug)
     return
@@ -235,7 +236,7 @@ function M.iswap_node(config, direction)
       swap_node = children[1]
     end
   else -- draw picker
-    user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
+    user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
     if not (type(user_input) == 'table' and #user_input == 1) then
       err('did not get two valid user inputs', config.debug)
       return
@@ -256,6 +257,7 @@ function M.iswap_node(config, direction)
 
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
 end
+
 
 -- TODO: refactor iswap() and iswap_with()
 -- swap current with one other node
@@ -302,7 +304,7 @@ function M.iswap_with(direction, config)
       -- already shifted over, no need for +1
       a = children[cur_nodes[1]]
     else
-      local user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
+      local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
       if not (type(user_input) == 'table' and #user_input == 1) then
         err('did not get a valid user input', config.debug)
         return
