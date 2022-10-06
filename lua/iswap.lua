@@ -8,17 +8,6 @@ local err = util.err
 
 local M = {}
 
-M.config = default_config
-
-function M.setup(config)
-  config = config or {}
-  M.config = setmetatable(config, { __index = default_config })
-end
-
-function M.evaluate_config(config)
-  return config and setmetatable(config, {__index = M.config}) or M.config
-end
-
 function M.init()
   require 'nvim-treesitter'.define_modules {
     iswap = {
@@ -28,6 +17,18 @@ function M.init()
       end
     }
   }
+end
+
+M.config = default_config
+
+function M.setup(config)
+  M.init()
+  config = config or {}
+  M.config = setmetatable(config, { __index = default_config })
+end
+
+function M.evaluate_config(config)
+  return config and setmetatable(config, {__index = M.config}) or M.config
 end
 
 function M.iswap(config)
