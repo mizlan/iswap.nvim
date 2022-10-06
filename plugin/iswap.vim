@@ -4,15 +4,6 @@ lua require("iswap").init()
 " highlight default link ISwapSnipe Search
 " highlight default link ISwapGrey Comment
 
-command ISwap lua require('iswap').iswap()
-command ISwapWith lua require('iswap').iswap_with()
-command ISwapWithRight lua require('iswap').iswap_with('right')
-command ISwapWithLeft lua require('iswap').iswap_with('left')
-command ISwapNode lua require('iswap').iswap_node()
-command ISwapNodeWith lua require('iswap').iswap_node_with()
-command ISwapNodeWithRight lua require('iswap').iswap_node_with('right')
-command ISwapNodeWithLeft lua require('iswap').iswap_node_with('left')
-
 " <Plug>ISwap will delay because it becomes <Plug>ISwapWith prefix sequence.
 " Use <Plug>ISwapNormal instead and etc for others
 nnoremap <Plug>ISwapNormal <Cmd>lua require('iswap').iswap()<CR>

@@ -327,4 +327,14 @@ function M.iswap_with(direction, config)
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapWith", -1)]])
 end
 
+local cmd = vim.api.nvim_create_user_command
+cmd("ISwap", function() require("iswap").iswap() end, {})
+cmd("ISwapWith", function() require("iswap").iswap_with() end, {})
+cmd("ISwapWithRight", function() require("iswap").iswap_with("right") end, {})
+cmd("ISwapWithLeft", function() require("iswap").iswap_with("left") end, {})
+cmd("ISwapNode", function() require("iswap").iswap_node() end, {})
+cmd("ISwapNodeWith", function() require("iswap").iswap_node_with() end, {})
+cmd("ISwapNodeWithRight", function() require("iswap").iswap_node_with("right") end, {})
+cmd("ISwapNodeWithLeft", function() require("iswap").iswap_node_with("left") end, {})
+
 return M
