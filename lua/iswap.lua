@@ -95,10 +95,10 @@ function M.iswap_node_with(direction, config)
     end
     if direction == 'right' and outer_cursor_node:next_named_sibling() ~= nil then -- only select node if it has a right sibling
       last_valid_node = outer_cursor_node
-		elseif direction == 'left' and outer_cursor_node:prev_named_sibling() ~= nil then  -- or left sibling
-			last_valid_node = outer_cursor_node
-		elseif direction == nil and util.has_siblings(outer_cursor_node) then  -- if no direction, then node with any sibling is ok
-			last_valid_node = outer_cursor_node
+    elseif direction == 'left' and outer_cursor_node:prev_named_sibling() ~= nil then  -- or left sibling
+      last_valid_node = outer_cursor_node
+    elseif direction == nil and util.has_siblings(outer_cursor_node) then  -- if no direction, then node with any sibling is ok
+        last_valid_node = outer_cursor_node
     end
     outer_cursor_node = outer_cursor_node:parent()
   end
