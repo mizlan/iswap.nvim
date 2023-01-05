@@ -78,8 +78,18 @@ end
 
 -- node 'a' is the one the cursor is on
 function M.swap_nodes_and_return_new_ranges(a, b, bufnr, should_move_cursor)
+  local winid = vim.api.nvim_get_current_win()
+
   local a_sr, a_sc = a:range()
   local b_sr, b_sc = b:range()
+
+  -- #64: note cursor position before swapping
+  local cursor_delta
+  if should_move_cursor then
+    local cursor = vim.api.nvim_win_get_cursor(winid)
+    local c_r, c_c = unpack { cursor[1] - 1, cursor[2] }
+    cursor_delta = { c_r - a_sr, c_c - a_sc }
+  end
 
   -- [1] first appearing node should be `a`, so swap for convenience
   local HAS_SWAPPED = false
@@ -144,7 +154,7 @@ function M.swap_nodes_and_return_new_ranges(a, b, bufnr, should_move_cursor)
   end
 
   if should_move_cursor then
-    vim.api.nvim_win_set_cursor(vim.api.nvim_get_current_win(), { b_data[1] + 1, b_data[2] })
+    vim.api.nvim_win_set_cursor(winid, { b_data[1] + 1 + cursor_delta[1], b_data[2] + cursor_delta[2] })
   end
 
   return { a_data, b_data }
