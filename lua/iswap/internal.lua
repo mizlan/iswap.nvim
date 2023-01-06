@@ -109,12 +109,12 @@ function M.swap_nodes_and_return_new_ranges(a, b, bufnr, should_move_cursor)
   local char_delta = 0
   local line_delta = 0
   if range1["end"].line < range2.start.line
-      or (range1["end"].line == range2.start.line and range1["end"].character < range2.start.character)
+      or (range1["end"].line == range2.start.line and range1["end"].character <= range2.start.character)
   then
     line_delta = #text2 - #text1
   end
 
-  if range1["end"].line == range2.start.line and range1["end"].character < range2.start.character then
+  if range1["end"].line == range2.start.line and range1["end"].character <= range2.start.character then
     if line_delta ~= 0 then
       --- why?
       --correction_after_line_change =  -range2.start.character
