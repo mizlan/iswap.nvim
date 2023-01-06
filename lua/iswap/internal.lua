@@ -7,6 +7,9 @@ local ft_to_lang = require('nvim-treesitter.parsers').ft_to_lang
 
 local M = {}
 
+-- certain lines of code below are taken from nvim-treesitter where i
+-- had to modify the function body of an existing function in ts_utils
+
 --
 function M.find(winid)
   local bufnr = vim.api.nvim_win_get_buf(winid)
