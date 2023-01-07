@@ -28,6 +28,11 @@ Use `:ISwapWith` if you want to have the element your cursor is over
 automatically as one of the elements. This way, you only need one keypress to
 make a swap.
 
+Use `:ISwapNode` to swap two arbitrary adjacent nodes. Again, `:ISwapNodeWith`
+picks the cursor element automatically as one of the elements.
+`:ISwapNodeWith{Left,Right}` are provided as shortcuts to swap the cursor node
+with its immediate left and right node respectively.
+
 ## configuration
 
 In your `init.lua`:
