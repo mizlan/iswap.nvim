@@ -331,4 +331,30 @@ function M.iswap_with(direction, config)
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapWith", -1)]])
 end
 
+-- The following are convenience wrapper functions which can be used in dot
+-- repeatable keymaps. Keymaps are also capable to be prefixed with [count]
+function M.iswap_with_left()
+  for _ = 1, vim.v.count1 do
+    require('iswap').iswap_with('left')
+  end
+end
+
+function M.iswap_with_right()
+  for _ = 1, vim.v.count1 do
+    require('iswap').iswap_with('right')
+  end
+end
+
+function M.iswap_node_with_left()
+  for _ = 1, vim.v.count1 do
+    require('iswap').iswap_node_with('left')
+  end
+end
+
+function M.iswap_node_with_right()
+  for _ = 1, vim.v.count1 do
+    require('iswap').iswap_node_with('right')
+  end
+end
+
 return M
