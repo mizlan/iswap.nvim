@@ -62,7 +62,7 @@ local function private_ts_utils_get_node_text(node, bufnr)
   end
 
   -- We have to remember that end_col is end-exclusive
-  local start_row, start_col, end_row, end_col = ts_utils.get_node_range(node)
+  local start_row, start_col, end_row, end_col = vim.treesitter.get_node_range(node)
 
   if start_row ~= end_row then
     local lines = vim.api.nvim_buf_get_lines(bufnr, start_row, end_row + 1, false)
