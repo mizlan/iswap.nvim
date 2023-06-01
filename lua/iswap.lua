@@ -35,16 +35,12 @@ function M.iswap(config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
 
-  local parent = internal.get_list_node_at_cursor(winid, config)
+  local parent, children = internal.get_list_node_at_cursor(winid, config)
   if not parent then
     err('did not find a satisfiable parent node', config.debug)
     return
   end
-  local children = ts_utils.get_named_children(parent)
   local sr, sc, er, ec = parent:range()
-
-  -- nothing to swap here
-  if #children < 2 then return end
 
   -- a and b are the nodes to swap
   local a, b
@@ -160,7 +156,7 @@ function M.iswap_node_with(direction, config)
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
 end
 
-function M.iswap_node(config, direction)
+function M.iswap_node(config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
@@ -270,27 +266,14 @@ function M.iswap_with(direction, config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
 
-  local parent = internal.get_list_node_at_cursor(winid, config)
-  if not parent then
+  local parent, children, cur_node_idx = internal.get_list_node_at_cursor(winid, config, true)
+  if not parent or not children or not cur_node_idx then
     err('did not find a satisfiable parent node', config.debug)
     return
   end
-  local children = ts_utils.get_named_children(parent)
 
-  -- nothing to swap here
-  if #children < 2 then return end
-
-  local cur_nodes = util.nodes_containing_cursor(children, winid)
-  if #cur_nodes == 0 then
-    err('not on a node!', 1)
-  end
-
-  if #cur_nodes > 1 then
-    err('multiple found, using first', config.debug)
-  end
-
-  local cur_node = children[cur_nodes[1]]
-  table.remove(children, cur_nodes[1])
+  local cur_node = children[cur_node_idx]
+  table.remove(children, cur_node_idx)
 
   local sr, sc, er, ec = parent:range()
 
@@ -303,10 +286,10 @@ function M.iswap_with(direction, config)
     a = children[1]
   else
     if direction == 'left' then
-      a = children[cur_nodes[1] - 1]
+      a = children[cur_node_idx - 1]
     elseif direction == 'right' then
       -- already shifted over, no need for +1
-      a = children[cur_nodes[1]]
+      a = children[cur_node_idx]
     else
       local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
       if not (type(user_input) == 'table' and #user_input == 1) then
