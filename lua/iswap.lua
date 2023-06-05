@@ -30,7 +30,7 @@ function M.init()
   }
 end
 
-function M.iswap(config)
+function M.iswap(config, imove)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
@@ -44,18 +44,20 @@ function M.iswap(config)
 
   -- a and b are the nodes to swap
   local a, b
+  local a_idx, b_idx
 
   -- enable autoswapping with two children
   -- and default to prompting for user input
   if config.autoswap and #children == 2 then
     a, b = unpack(children)
   else
-    local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 2)
+    local user_input, user_input_idx = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 2)
     if not (type(user_input) == 'table' and #user_input == 2) then
       err('did not get two valid user inputs', config.debug)
       return
     end
     a, b = unpack(user_input)
+    a_idx, b_idx = unpack(user_input_idx)
   end
 
   if a == nil or b == nil then
@@ -63,15 +65,17 @@ function M.iswap(config)
     return
   end
 
-  local a_range, b_range = unpack(
-    internal.swap_nodes_and_return_new_ranges(a, b, bufnr, false)
-  )
+  local a_range, b_range
+  if not imove then
+    a_range, b_range = unpack(internal.swap_nodes_and_return_new_ranges(a, b, bufnr, false))
+  else
+    a_range, b_range = unpack(internal.move_nodes_to_index(children, a, a_idx, bufnr, b_idx, config))
+  end
 
   ui.flash_confirm(bufnr, { a_range, b_range }, config)
 
-  vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
+  vim.cmd([[silent! call repeat#set("\<Plug>IMoveNormal", -1)]])
 end
-
 
 function M.iswap_node_with(direction, config)
   config = M.evaluate_config(config)
@@ -258,10 +262,12 @@ function M.iswap_node(config)
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
 end
 
-
 -- TODO: refactor iswap() and iswap_with()
 -- swap current with one other node
-function M.iswap_with(direction, config)
+function M.imove_with(direction, config) M.iswap_with(direction, config, true) end
+function M.imove(config) M.iswap(config, true) end
+
+function M.iswap_with(direction, config, imove)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
@@ -272,13 +278,12 @@ function M.iswap_with(direction, config)
     return
   end
 
-  local cur_node = children[cur_node_idx]
-  table.remove(children, cur_node_idx)
+  local cur_node = table.remove(children, cur_node_idx)
 
   local sr, sc, er, ec = parent:range()
 
-  -- a is the node to swap the cur_node with
-  local a
+  -- a is the node to move the cur_node into the place of
+  local a, a_idx
 
   -- enable autoswapping with one other child
   -- and default to prompting for user input
@@ -291,12 +296,17 @@ function M.iswap_with(direction, config)
       -- already shifted over, no need for +1
       a = children[cur_node_idx]
     else
-      local user_input = ui.prompt(bufnr, config, children, {{sr, sc}, {er, ec}}, 1)
+      local user_input, user_input_idx = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
       if not (type(user_input) == 'table' and #user_input == 1) then
         err('did not get a valid user input', config.debug)
         return
       end
-      a = unpack(user_input)
+      if not (type(user_input_idx) == 'table' and #user_input_idx == 1) then
+        err('did not get a valid user input', config.debug)
+        return
+      end
+      a = user_input[1]
+      a_idx = user_input_idx[1]
     end
   end
 
@@ -305,13 +315,21 @@ function M.iswap_with(direction, config)
     return
   end
 
-  local a_range, b_range = unpack(
-    internal.swap_nodes_and_return_new_ranges(cur_node, a, bufnr, config.move_cursor)
-  )
-
+  local a_range, b_range
+  if not a_idx or not imove then
+    a_range, b_range = unpack(internal.swap_nodes_and_return_new_ranges(cur_node, a, bufnr, config.move_cursor))
+  else
+    table.insert(children, cur_node_idx, cur_node)
+    if cur_node_idx <= a_idx then a_idx = a_idx + 1 end
+    a_range, b_range = unpack(internal.move_nodes_to_index(children, cur_node, cur_node_idx, bufnr, a_idx, config))
+  end
   ui.flash_confirm(bufnr, { a_range, b_range }, config)
 
-  vim.cmd([[silent! call repeat#set("\<Plug>ISwapWith", -1)]])
+  if imove then
+    vim.cmd([[silent! call repeat#set("\<Plug>IMoveWith", -1)]])
+  else
+    vim.cmd([[silent! call repeat#set("\<Plug>ISwapWith", -1)]])
+  end
 end
 
 return M
