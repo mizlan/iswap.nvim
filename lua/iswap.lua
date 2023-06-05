@@ -30,47 +30,26 @@ function M.init()
   }
 end
 
-function M.iswap(config, imove)
+function M.iswap(config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
-  local winid = vim.api.nvim_get_current_win()
 
-  local parent, children = internal.get_list_node_at_cursor(winid, config)
-  if not parent then
-    err('did not find a satisfiable parent node', config.debug)
-    return
-  end
-  local sr, sc, er, ec = parent:range()
+  local a, b = internal.choose_two_nodes_from_list(config)
 
-  -- a and b are the nodes to swap
-  local a, b
-  local a_idx, b_idx
+  local a_range, b_range = unpack(internal.swap_nodes_and_return_new_ranges(a, b, bufnr, false))
 
-  -- enable autoswapping with two children
-  -- and default to prompting for user input
-  if config.autoswap and #children == 2 then
-    a, b = unpack(children)
-  else
-    local user_input, user_input_idx = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 2)
-    if not (type(user_input) == 'table' and #user_input == 2) then
-      err('did not get two valid user inputs', config.debug)
-      return
-    end
-    a, b = unpack(user_input)
-    a_idx, b_idx = unpack(user_input_idx)
-  end
+  ui.flash_confirm(bufnr, { a_range, b_range }, config)
 
-  if a == nil or b == nil then
-    err('some of the nodes were nil', config.debug)
-    return
-  end
+  vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
+end
 
-  local a_range, b_range
-  if not imove then
-    a_range, b_range = unpack(internal.swap_nodes_and_return_new_ranges(a, b, bufnr, false))
-  else
-    a_range, b_range = unpack(internal.move_nodes_to_index(children, a, a_idx, bufnr, b_idx, config))
-  end
+function M.imove(config)
+  config = M.evaluate_config(config)
+  local bufnr = vim.api.nvim_get_current_buf()
+
+  local a, b, children, a_idx, b_idx = internal.choose_two_nodes_from_list(config)
+
+  local a_range, b_range = unpack(internal.move_node_to_index(children, a, a_idx, bufnr, b_idx, config))
 
   ui.flash_confirm(bufnr, { a_range, b_range }, config)
 
@@ -264,72 +243,38 @@ end
 
 -- TODO: refactor iswap() and iswap_with()
 -- swap current with one other node
-function M.imove_with(direction, config) M.iswap_with(direction, config, true) end
-function M.imove(config) M.iswap(config, true) end
-
-function M.iswap_with(direction, config, imove)
+function M.imove_with(direction, config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
-  local winid = vim.api.nvim_get_current_win()
 
-  local parent, children, cur_node_idx = internal.get_list_node_at_cursor(winid, config, true)
-  if not parent or not children or not cur_node_idx then
-    err('did not find a satisfiable parent node', config.debug)
-    return
-  end
-
-  local cur_node = table.remove(children, cur_node_idx)
-
-  local sr, sc, er, ec = parent:range()
-
-  -- a is the node to move the cur_node into the place of
-  local a, a_idx
-
-  -- enable autoswapping with one other child
-  -- and default to prompting for user input
-  if config.autoswap and #children == 1 then
-    a = children[1]
-  else
-    if direction == 'left' then
-      a = children[cur_node_idx - 1]
-    elseif direction == 'right' then
-      -- already shifted over, no need for +1
-      a = children[cur_node_idx]
-    else
-      local user_input, user_input_idx = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
-      if not (type(user_input) == 'table' and #user_input == 1) then
-        err('did not get a valid user input', config.debug)
-        return
-      end
-      if not (type(user_input_idx) == 'table' and #user_input_idx == 1) then
-        err('did not get a valid user input', config.debug)
-        return
-      end
-      a = user_input[1]
-      a_idx = user_input_idx[1]
-    end
-  end
-
-  if a == nil then
-    err('the node was nil', config.debug)
-    return
-  end
+  local cur_node, a, children, cur_node_idx, a_idx = internal.choose_one_other_node_from_list(direction, config)
 
   local a_range, b_range
-  if not a_idx or not imove then
+  if not a_idx  then
+    -- This means the node is adjacent, swap and move are equivalent
     a_range, b_range = unpack(internal.swap_nodes_and_return_new_ranges(cur_node, a, bufnr, config.move_cursor))
   else
     table.insert(children, cur_node_idx, cur_node)
     if cur_node_idx <= a_idx then a_idx = a_idx + 1 end
     a_range, b_range = unpack(internal.move_nodes_to_index(children, cur_node, cur_node_idx, bufnr, a_idx, config))
   end
+
   ui.flash_confirm(bufnr, { a_range, b_range }, config)
 
-  if imove then
-    vim.cmd([[silent! call repeat#set("\<Plug>IMoveWith", -1)]])
-  else
+  vim.cmd([[silent! call repeat#set("\<Plug>IMoveWith", -1)]])
+end
+
+function M.iswap_with(direction, config)
+  config = M.evaluate_config(config)
+  local bufnr = vim.api.nvim_get_current_buf()
+
+  local cur_node, a = internal.choose_one_other_node_from_list(direction, config)
+
+  local a_range, b_range = unpack(internal.swap_nodes_and_return_new_ranges(cur_node, a, bufnr, config.move_cursor))
+
+  ui.flash_confirm(bufnr, { a_range, b_range }, config)
+
     vim.cmd([[silent! call repeat#set("\<Plug>ISwapWith", -1)]])
-  end
 end
 
 return M

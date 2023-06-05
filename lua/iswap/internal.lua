@@ -196,4 +196,93 @@ function M.detach(bufnr)
   -- TODO: Fill this with what you need to do when detaching from a buffer
 end
 
+local ui = require('iswap.ui')
+function M.choose_two_nodes_from_list(config)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local winid = vim.api.nvim_get_current_win()
+
+  local parent, children = M.get_list_node_at_cursor(winid, config)
+  if not parent then
+    err('did not find a satisfiable parent node', config.debug)
+    return
+  end
+  local sr, sc, er, ec = parent:range()
+
+  -- a and b are the nodes to swap
+  local a, b
+  local a_idx, b_idx
+
+  -- enable autoswapping with two children
+  -- and default to prompting for user input
+  if config.autoswap and #children == 2 then
+    a, b = unpack(children)
+  else
+    local user_input, user_input_idx = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 2)
+    if not (type(user_input) == 'table' and #user_input == 2) then
+      err('did not get two valid user inputs', config.debug)
+      return
+    end
+    a, b = unpack(user_input)
+    a_idx, b_idx = unpack(user_input_idx)
+  end
+
+  if a == nil or b == nil then
+    err('some of the nodes were nil', config.debug)
+    return
+  end
+
+  return a, b, children, a_idx, b_idx
+end
+
+function M.choose_one_other_node_from_list(direction, config)
+
+  local bufnr = vim.api.nvim_get_current_buf()
+  local winid = vim.api.nvim_get_current_win()
+
+  local parent, children, cur_node_idx = M.get_list_node_at_cursor(winid, config, true)
+  if not parent or not children or not cur_node_idx then
+    err('did not find a satisfiable parent node', config.debug)
+    return
+  end
+
+  local cur_node = table.remove(children, cur_node_idx)
+
+  local sr, sc, er, ec = parent:range()
+
+  -- a is the node to move the cur_node into the place of
+  local a, a_idx
+
+  -- enable autoswapping with one other child
+  -- and default to prompting for user input
+  if config.autoswap and #children == 1 then
+    a = children[1]
+  else
+    if direction == 'left' then
+      a = children[cur_node_idx - 1]
+    elseif direction == 'right' then
+      -- already shifted over, no need for +1
+      a = children[cur_node_idx]
+    else
+      local user_input, user_input_idx = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
+      if not (type(user_input) == 'table' and #user_input == 1) then
+        err('did not get a valid user input', config.debug)
+        return
+      end
+      if not (type(user_input_idx) == 'table' and #user_input_idx == 1) then
+        err('did not get a valid user input', config.debug)
+        return
+      end
+      a = user_input[1]
+      a_idx = user_input_idx[1]
+    end
+  end
+
+  if a == nil then
+    err('the node was nil', config.debug)
+    return
+  end
+
+  return cur_node, a, children, cur_node_idx, a_idx
+end
+
 return M
