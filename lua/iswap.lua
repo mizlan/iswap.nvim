@@ -256,7 +256,7 @@ function M.imove_with(direction, config)
   else
     table.insert(children, cur_node_idx, cur_node)
     if cur_node_idx <= a_idx then a_idx = a_idx + 1 end
-    a_range, b_range = unpack(internal.move_nodes_to_index(children, cur_node, cur_node_idx, bufnr, a_idx, config))
+    a_range, b_range = unpack(internal.move_node_to_index(children, cur_node, cur_node_idx, bufnr, a_idx, config))
   end
 
   ui.flash_confirm(bufnr, { a_range, b_range }, config)

@@ -170,7 +170,7 @@ function M.swap_ranges_and_return_new_ranges(a, b, bufnr, should_move_cursor)
   return { a_data, b_data }
 end
 
-function M.move_nodes_to_index(children, cur_node, cur_node_idx, bufnr, a_idx, config)
+function M.move_node_to_index(children, cur_node, cur_node_idx, bufnr, a_idx, config)
   local children_ranges = vim.tbl_map(function(node) return { node:range() } end, children)
   local cur_range = { cur_node:range() }
 
