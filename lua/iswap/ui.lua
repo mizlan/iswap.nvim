@@ -38,11 +38,9 @@ function M.prompt(bufnr, config, nodes, active_range, times)
     M.grey_the_rest_out(bufnr, config, range_start, range_end)
   end
 
-  local map = {}
   local imap = {}
   for i, node in ipairs(nodes) do
     local key = keys:sub(i, i)
-    map[key] = node
     imap[key] = i
     ts_utils.highlight_node(node, bufnr, M.iswap_ns, config.hl_selection)
     local start_row, start_col = node:range()
@@ -51,16 +49,14 @@ function M.prompt(bufnr, config, nodes, active_range, times)
   end
   vim.cmd('redraw')
 
-  local res = {}
   local ires = {}
   for _ = 1, times do
     local keystr = util.getchar_handler()
-    if keystr == nil or map[keystr] == nil then break end
-    table.insert(res, map[keystr])
+    if keystr == nil or imap[keystr] == nil then break end
     table.insert(ires, imap[keystr])
   end
   M.clear_namespace(bufnr)
-  return res, ires
+  return ires
 end
 
 -- RANGES is a list of RANGE where RANGE is like

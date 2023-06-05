@@ -121,7 +121,7 @@ function M.iswap_node_with(direction, config)
         err('did not get two valid user inputs', config.debug)
         return
       end
-      swap_node = unpack(user_input)
+      swap_node = children[user_input[1]]
     end
   end
 
@@ -195,7 +195,7 @@ function M.iswap_node(config)
     return
   end
   -- we want to pick siblings of user selected node (thus:  usr_node:parent())
-  local picked_node = user_input[1] -- for swap
+  local picked_node = ancestors[user_input[1]] -- for swap
   local picked_parent = picked_node:parent()
   local children = ts_utils.get_named_children(picked_parent)
   local sr, sc, er, ec = picked_parent:range()
@@ -224,7 +224,7 @@ function M.iswap_node(config)
       err('did not get two valid user inputs', config.debug)
       return
     end
-    swap_node = unpack(user_input)
+    swap_node = children[user_input[1]]
   end
 
   if swap_node == nil then

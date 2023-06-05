@@ -217,13 +217,13 @@ function M.choose_two_nodes_from_list(config)
   if config.autoswap and #children == 2 then
     a, b = unpack(children)
   else
-    local user_input, user_input_idx = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 2)
+    local user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 2)
     if not (type(user_input) == 'table' and #user_input == 2) then
       err('did not get two valid user inputs', config.debug)
       return
     end
-    a, b = unpack(user_input)
-    a_idx, b_idx = unpack(user_input_idx)
+    a_idx, b_idx = unpack(user_input)
+    a, b = children[a_idx], children[b_idx]
   end
 
   if a == nil or b == nil then
@@ -263,17 +263,13 @@ function M.choose_one_other_node_from_list(direction, config)
       -- already shifted over, no need for +1
       a = children[cur_node_idx]
     else
-      local user_input, user_input_idx = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
+      local user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
       if not (type(user_input) == 'table' and #user_input == 1) then
         err('did not get a valid user input', config.debug)
         return
       end
-      if not (type(user_input_idx) == 'table' and #user_input_idx == 1) then
-        err('did not get a valid user input', config.debug)
-        return
-      end
-      a = user_input[1]
-      a_idx = user_input_idx[1]
+      a_idx = user_input[1]
+      a = children[a_idx]
     end
   end
 
