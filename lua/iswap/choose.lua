@@ -30,9 +30,9 @@ function M.two_nodes_from_list(config)
       a, b = unpack(children)
       a_idx, b_idx = 1, 2
     else
-      local user_input, user_key = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 2)
+      local user_input, user_keys = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 2)
       if not (type(user_input) == 'table' and #user_input == 2) then
-        if user_key[1] == config.expand_key then goto continue end
+        if user_keys[1] == config.expand_key then goto continue end
         err('did not get two valid user inputs', config.debug)
         return
       end
@@ -81,9 +81,9 @@ function M.one_other_node_from_list(direction, config)
         a = children[cur_node_idx]
         a_idx = cur_node_idx
       else
-        local user_input, user_key = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
+        local user_input, user_keys = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
         if not (type(user_input) == 'table' and #user_input == 1) then
-          if user_key[1] == config.expand_key then goto continue end
+          if user_keys[1] == config.expand_key then goto continue end
           err('did not get a valid user input', config.debug)
           return
         end
