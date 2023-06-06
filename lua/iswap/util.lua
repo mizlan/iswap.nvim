@@ -5,6 +5,7 @@ function M.err(msg, flag)
     vim.api.nvim_echo({{msg, 'Error'}}, true, {})
   end
 end
+local err = M.err
 
 function M.tbl_reverse(tbl)
   for i=1, math.floor(#tbl / 2) do
@@ -72,6 +73,45 @@ function M.getchar_handler()
     return key_str
   end
   return nil
+end
+
+
+function M.ancestors(cur_node, only_current_line, config)
+  local parent = cur_node:parent()
+
+  if not parent then
+    err('did not find a satisfiable parent node', config.debug)
+    return
+  end
+
+  -- pick parent recursive for current line
+  local ancestors = { cur_node }
+  local prev_parent = cur_node
+  local current_row = parent:start()
+  local last_row, last_col
+
+  -- only get parents - for current line
+  while parent and (not only_current_line or parent:start() == current_row) do
+    last_row, last_col = prev_parent:start()
+    local s_row, s_col = parent:start()
+
+    if last_row == s_row and last_col == s_col then
+      -- new parent has same start as last one. Override last one
+      if M.has_siblings(parent) and parent:type() ~= 'comment' then
+        -- only add if it has >0 siblings and is not comment node
+        -- (override previous since same start position)
+        ancestors[#ancestors] = parent
+      end
+    else
+      table.insert(ancestors, parent)
+      last_row = s_row
+      last_col = s_col
+    end
+    prev_parent = parent
+    parent = parent:parent()
+  end
+
+  return ancestors, last_row
 end
 
 return M
