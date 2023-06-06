@@ -181,17 +181,13 @@ function M.move_node_to_index(children, cur_node_idx, a_idx, config)
   local cur_range = children_ranges[cur_node_idx]
 
   local incr = (cur_node_idx < a_idx) and 1 or -1
-  local ret_a, ret_b
   for i = cur_node_idx + incr, a_idx, incr do
-    local a_range, b_range =
+    local _, b_range =
       unpack(M.swap_ranges_and_return_new_ranges(cur_range, children_ranges[i], bufnr, config.move_cursor))
-    if not ret_a then ret_a = a_range end
-    ret_b = b_range
     cur_range = b_range
-    children_ranges[i] = a_range
   end
 
-  return { ret_a, ret_b }
+  return { cur_range }
 end
 
 function M.attach(bufnr, lang)
