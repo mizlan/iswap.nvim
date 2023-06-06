@@ -28,6 +28,37 @@ function M.init()
       end
     }
   }
+
+  -- <Plug>ISwap will delay because it becomes <Plug>ISwapWith prefix sequence.
+  -- Use <Plug>ISwapNormal instead and etc for others
+  local cmds = {
+    { 'ISwap', 'iswap', {}, 'ISwapNormal' },
+    { 'ISwapWith', 'iswap_with', false },
+    { 'ISwapWithRight', 'iswap_with', "right" },
+    { 'ISwapWithLeft', 'iswap_with', "left" },
+    { 'IMove', 'imove', {}, 'IMoveNormal' },
+    { 'IMoveWith', 'imove_with', false },
+    { 'IMoveWithRight', 'imove_with', "right" },
+    { 'IMoveWithLeft', 'imove_with', "left" },
+    { 'ISwapNode', 'iswap_node', {}, 'ISwapNodeNormal' },
+    { 'ISwapNodeWith', 'iswap_node_with', false },
+    { 'ISwapNodeWithRight', 'iswap_node_with', "right" },
+    { 'ISwapNodeWithLeft', 'iswap_node_with', "left" },
+    { 'IMoveNode', 'imove_node', {}, 'IMoveNodeNormal' },
+    { 'IMoveNodeWith', 'imove_node_with', false },
+    { 'IMoveNodeWithRight', 'imove_node_with', "right" },
+    { 'IMoveNodeWithLeft', 'imove_node_with', "left" },
+  }
+  local map = vim.keymap.set
+  for _, v in ipairs(cmds) do
+    local cmd, fn, arg, plug = unpack(v)
+    plug = plug or cmd
+    local cb = function() M[fn](arg) end
+    -- vim.cmd('command ' .. cmd .. " lua require'iswap'." .. rhs)
+    vim.api.nvim_create_user_command(cmd, cb, {})
+    -- map('n', '<Plug>' .. plug, "<cmd>lua require'iswap'." .. rhs .. '<cr>')
+    map('n', '<Plug>' .. plug, cb)
+  end
 end
 
 function M.iswap(config)
@@ -76,7 +107,7 @@ function M.iswap_node_with(direction, config)
       last_valid_node = outer_cursor_node
     elseif direction == 'left' and outer_cursor_node:prev_named_sibling() ~= nil then  -- or left sibling
       last_valid_node = outer_cursor_node
-    elseif direction == nil and util.has_siblings(outer_cursor_node) then  -- if no direction, then node with any sibling is ok
+    elseif (direction == nil or direction == false) and util.has_siblings(outer_cursor_node) then  -- if no direction, then node with any sibling is ok
       last_valid_node = outer_cursor_node
     end
     outer_cursor_node = outer_cursor_node:parent()
