@@ -83,7 +83,7 @@ function M.get_ancestors_at_cursor(cur_node, only_current_line, config)
   return ancestors, last_row
 end
 
--- returns list_nodes  
+-- returns list_nodes
 function M.get_list_nodes_at_cursor(winid, config, needs_cursor_node)
   local cursor_range = util.get_cursor_range(winid)
   local visual_sel = #cursor_range > 2

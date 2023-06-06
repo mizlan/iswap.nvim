@@ -1,6 +1,6 @@
 local M = {}
 
-M.keys = 'asdfghjklqwertyuiopzxcvbnm'
+M.keys = 'asdfghjklqwertyuiopxcvbnm'
 M.hl_grey = 'Comment'
 M.hl_snipe = 'Search'
 M.hl_selection = 'Visual'
@@ -9,7 +9,9 @@ M.hl_flash = 'IncSearch'
 M.hl_grey_priority = 1000
 M.grey = 'enable'
 M.expand_key = 'z'
+M.autoswap = false
 M.only_current_line = true
 M.visual_select_list = true
+
 
 return M
