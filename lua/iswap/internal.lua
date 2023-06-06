@@ -38,7 +38,15 @@ end
 -- be on a named child of the list node
 -- this also returns the cursor node index
 function M.get_list_node_at_cursor(winid, ignored_parents, config, needs_cursor_node)
-  local ret = nil
+  local lists = M.get_list_nodes_at_cursor(winid, config, needs_cursor_node)
+  if not lists then return end
+  lists = vim.tbl_filter(function(node) return vim.tbl_contains(ignored_parents, node) end, lists)
+  -- last node is generally(always?) the smallest
+  return lists[#lists]
+end
+
+function M.get_list_nodes_at_cursor(winid, config, needs_cursor_node)
+  local ret = {}
   local iswap_list_captures = M.find(winid)
   if not iswap_list_captures then
     -- query not supported
@@ -46,25 +54,21 @@ function M.get_list_node_at_cursor(winid, ignored_parents, config, needs_cursor_
   end
   for id, node, metadata in iswap_list_captures do
     err('found node', config.debug)
-    if not vim.tbl_contains(ignored_parents, node) then
-      if util.node_contains_cursor(node, winid) and node:named_child_count() > 1 then
-        local children = ts_utils.get_named_children(node)
-        if needs_cursor_node then
-          local cur_nodes = util.nodes_containing_cursor(children, winid)
-          if #cur_nodes >= 1 then
-            if #cur_nodes > 1 then err('multiple found, using first', config.debug) end
-            ret = { node, children, cur_nodes[1] }
-          end
-        else
-          ret = { node, children }
+    if util.node_contains_cursor(node, winid) and node:named_child_count() > 1 then
+      local children = ts_utils.get_named_children(node)
+      if needs_cursor_node then
+        local cur_nodes = util.nodes_containing_cursor(children, winid)
+        if #cur_nodes >= 1 then
+          if #cur_nodes > 1 then err('multiple found, using first', config.debug) end
+          ret[#ret + 1] = { node, children, cur_nodes[1] }
         end
+      else
+        ret[#ret + 1] = { node, children }
       end
     end
   end
   err('completed', config.debug)
-  if ret then
-    return unpack(ret)
-  end
+  return ret
 end
 
 local function node_or_range_get_text(node_or_range, bufnr)
@@ -196,6 +200,5 @@ end
 function M.detach(bufnr)
   -- TODO: Fill this with what you need to do when detaching from a buffer
 end
-
 
 return M
