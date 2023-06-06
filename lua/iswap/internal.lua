@@ -11,11 +11,10 @@ local M = {}
 -- had to modify the function body of an existing function in ts_utils
 
 --
-function M.find(winid)
-  local bufnr = vim.api.nvim_win_get_buf(winid)
-  local cursor = vim.api.nvim_win_get_cursor(winid)
-  local cursor_range = { cursor[1] - 1, cursor[2] }
-  local row = cursor_range[1]
+function M.find(winid, cursor_range)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local sr, er = cursor_range[1], cursor_range[3]
+  er = (er and (er + 1)) or (sr + 1)
   -- local root = ts_utils.get_root_for_position(unpack(cursor_range))
   -- NOTE: this root is freshly parsed, but this may not be the best way of getting a fresh parse
   --       see :h Query:iter_captures()
@@ -28,7 +27,7 @@ function M.find(winid)
     err('Cannot query this filetype', true)
     return
   end
-  return q:iter_captures(root, bufnr, row, row + 1)
+  return q:iter_captures(root, bufnr, sr, er)
 end
 
 -- Get the closest parent that can be used as a list wherein elements can be
@@ -83,11 +82,14 @@ function M.get_ancestors_at_cursor(cur_node, only_current_line, config)
 
   return ancestors, last_row
 end
+
+-- returns list_nodes  
 function M.get_list_nodes_at_cursor(winid, config, needs_cursor_node)
   local cursor_range = util.get_cursor_range(winid)
+  local visual_sel = #cursor_range > 2
 
   local ret = {}
-  local iswap_list_captures = M.find(winid)
+  local iswap_list_captures = M.find(winid, cursor_range)
   if not iswap_list_captures then
     -- query not supported
     return
@@ -95,19 +97,31 @@ function M.get_list_nodes_at_cursor(winid, config, needs_cursor_node)
 
   for id, node, metadata in iswap_list_captures do
     err('found node', config.debug)
-    if util.node_contains_pos(node, cursor_range) and node:named_child_count() > 1 then
+    if util.node_intersects_range(node, cursor_range) and node:named_child_count() > 1 then
       local children = ts_utils.get_named_children(node)
       if needs_cursor_node then
-        local cur_nodes = util.nodes_containing_pos(children, cursor_range)
+        local cur_nodes = util.nodes_containing_range(children, cursor_range)
         if #cur_nodes >= 1 then
           if #cur_nodes > 1 then err('multiple found, using first', config.debug) end
           ret[#ret + 1] = { node, children, cur_nodes[1] }
         end
       else
-        ret[#ret + 1] = { node, children }
+        local r = { node, children }
+        if visual_sel and config.visual_select_list then
+          if
+            util.node_is_range(node, cursor_range)
+            or #util.range_containing_nodes(children, cursor_range) == #children
+          then
+            -- The visual selection is equivalent to the list
+            ret[#ret + 1] = r
+          end
+        else
+          ret[#ret + 1] = r
+        end
       end
     end
   end
+  if not (not needs_cursor_node and visual_sel and config.visual_select_list) then util.tbl_reverse(ret) end
   err('completed', config.debug)
   return ret
 end
