@@ -46,18 +46,21 @@ function M.get_list_node_at_cursor(winid, ignored_parents, config, needs_cursor_
 end
 
 function M.get_list_nodes_at_cursor(winid, config, needs_cursor_node)
+  local cursor_range = util.get_cursor_range(winid)
+
   local ret = {}
   local iswap_list_captures = M.find(winid)
   if not iswap_list_captures then
     -- query not supported
     return
   end
+
   for id, node, metadata in iswap_list_captures do
     err('found node', config.debug)
-    if util.node_contains_cursor(node, winid) and node:named_child_count() > 1 then
+    if util.node_contains_pos(node, cursor_range) and node:named_child_count() > 1 then
       local children = ts_utils.get_named_children(node)
       if needs_cursor_node then
-        local cur_nodes = util.nodes_containing_cursor(children, winid)
+        local cur_nodes = util.nodes_containing_pos(children, cursor_range)
         if #cur_nodes >= 1 then
           if #cur_nodes > 1 then err('multiple found, using first', config.debug) end
           ret[#ret + 1] = { node, children, cur_nodes[1] }

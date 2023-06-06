@@ -29,13 +29,29 @@ function M.compare_position(a, b)
 end
 
 function M.within(a, b, c)
-  return M.compare_position(a, b) and M.compare_position(b, c)
+  if #b == 4 then
+    local b1 = { b[1], b[2] }
+    local b2 = { b[3], b[4] }
+    return M.compare_position(a, b1) and M.compare_position(b2, c)
+  else
+    return M.compare_position(a, b) and M.compare_position(b, c)
+  end
 end
 
-function M.nodes_containing_cursor(node, winid)
-  local cursor = vim.api.nvim_win_get_cursor(winid)
-  local cursor_range = { cursor[1] - 1, cursor[2] }
-  return M.nodes_containing_pos(node, cursor_range)
+local feedkeys = vim.api.nvim_feedkeys
+local termcodes = vim.api.nvim_replace_termcodes
+local function t(k) return termcodes(k, true, true, true) end
+local esc = t('<esc>')
+function M.get_cursor_range(winid)
+  if vim.api.nvim_get_mode().mode:lower() == 'v' then
+    feedkeys(esc, 'ix', false)
+    local start_row, start_col = unpack(vim.api.nvim_buf_get_mark(0, '<'))
+    local end_row, end_col = unpack(vim.api.nvim_buf_get_mark(0, '>'))
+    return { start_row - 1, start_col, end_row - 1, end_col }
+  else
+    local cursor = vim.api.nvim_win_get_cursor(winid)
+    return { cursor[1] - 1, cursor[2] }
+  end
 end
 
 -- pos is in form {r, c}
@@ -47,12 +63,6 @@ function M.node_contains_pos(node, pos)
 end
 function M.node_contains_range(node, pos1, pos2)
   return M.node_contains_pos(node, pos1) and M.node_contains_pos(node, pos2)
-end
-
-function M.node_contains_cursor(node, winid)
-  local cursor = vim.api.nvim_win_get_cursor(winid)
-  local cursor_range = { cursor[1] - 1, cursor[2] }
-  return M.node_contains_pos(node, cursor_range)
 end
 
 function M.nodes_containing_pos(nodes, pos)
