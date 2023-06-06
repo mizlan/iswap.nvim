@@ -33,7 +33,10 @@ end
 
 -- Get the closest parent that can be used as a list wherein elements can be
 -- swapped.
-function M.get_list_node_at_cursor(winid, config, find_cur_node)
+-- needs_cursor_node is a boolean indicating whether we require that the cursor
+-- be on a named child of the list node
+-- this also returns the cursor node index
+function M.get_list_node_at_cursor(winid, config, needs_cursor_node)
   local ret = nil
   local cursor = vim.api.nvim_win_get_cursor(winid)
   local cursor_range = { cursor[1] - 1, cursor[2] }
@@ -49,7 +52,7 @@ function M.get_list_node_at_cursor(winid, config, find_cur_node)
     local end_ = { end_row, end_col }
     if util.within(start, cursor_range, end_) and node:named_child_count() > 1 then
       local children = ts_utils.get_named_children(node)
-      if find_cur_node then
+      if needs_cursor_node then
         local cur_nodes = util.nodes_containing_cursor(children, winid)
         if #cur_nodes >= 1 then
           if #cur_nodes > 1 then
