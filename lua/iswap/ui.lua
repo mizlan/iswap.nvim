@@ -50,13 +50,15 @@ function M.prompt(bufnr, config, nodes, active_range, times)
   vim.cmd('redraw')
 
   local ires = {}
+  local keys = {}
   for _ = 1, times do
     local keystr = util.getchar_handler()
+    table.insert(keys, keystr)
     if keystr == nil or imap[keystr] == nil then break end
     table.insert(ires, imap[keystr])
   end
   M.clear_namespace(bufnr)
-  return ires
+  return ires, keys
 end
 
 -- RANGES is a list of RANGE where RANGE is like

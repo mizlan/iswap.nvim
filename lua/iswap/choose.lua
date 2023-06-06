@@ -9,11 +9,15 @@ function M.two_nodes_from_list(config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
 
-  local parent, children = internal.get_list_node_at_cursor(winid, config)
+  local ignored_parents = {}
+
+  ::expand_list::
+  local parent, children = internal.get_list_node_at_cursor(winid, ignored_parents, config)
   if not parent then
     err('did not find a satisfiable parent node', config.debug)
     return
   end
+  ignored_parents[#ignored_parents+1] = parent
   local sr, sc, er, ec = parent:range()
 
   -- a and b are the nodes to swap
@@ -26,8 +30,11 @@ function M.two_nodes_from_list(config)
     a, b = unpack(children)
     a_idx, b_idx = 1, 2
   else
-    local user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 2)
+    local user_input, user_key = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 2)
     if not (type(user_input) == 'table' and #user_input == 2) then
+      if user_key[1] == config.expand_key then
+        goto expand_list
+      end
       err('did not get two valid user inputs', config.debug)
       return
     end
@@ -47,11 +54,15 @@ function M.one_other_node_from_list(direction, config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
 
-  local parent, children, cur_node_idx = internal.get_list_node_at_cursor(winid, config, true)
+  local ignored_parents = {}
+
+  ::expand_list::
+  local parent, children, cur_node_idx = internal.get_list_node_at_cursor(winid, ignored_parents, config, true)
   if not parent or not children or not cur_node_idx then
     err('did not find a satisfiable parent node', config.debug)
     return
   end
+  ignored_parents[#ignored_parents+1] = parent
 
   local cur_node = table.remove(children, cur_node_idx)
 
@@ -74,8 +85,11 @@ function M.one_other_node_from_list(direction, config)
       a = children[cur_node_idx]
       a_idx = cur_node_idx
     else
-      local user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
+      local user_input, user_key = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
       if not (type(user_input) == 'table' and #user_input == 1) then
+        if user_key[1] == config.expand_key then
+          goto expand_list
+        end
         err('did not get a valid user input', config.debug)
         return
       end
