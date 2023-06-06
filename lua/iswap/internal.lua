@@ -45,6 +45,44 @@ function M.get_list_node_at_cursor(winid, ignored_parents, config, needs_cursor_
   return lists[#lists]
 end
 
+-- Returns ancestors from inside to outside
+function M.get_ancestors_at_cursor(cur_node, only_current_line, config)
+  local parent = cur_node:parent()
+
+  if not parent then
+    err('did not find a satisfiable parent node', config.debug)
+    return
+  end
+
+  -- pick parent recursive for current line
+  local ancestors = { cur_node }
+  local prev_parent = cur_node
+  local current_row = parent:start()
+  local last_row, last_col
+
+  -- only get parents - for current line
+  while parent and (not only_current_line or parent:start() == current_row) do
+    last_row, last_col = prev_parent:start()
+    local s_row, s_col = parent:start()
+
+    if last_row == s_row and last_col == s_col then
+      -- new parent has same start as last one. Override last one
+      if util.has_siblings(parent) and parent:type() ~= 'comment' then
+        -- only add if it has >0 siblings and is not comment node
+        -- (override previous since same start position)
+        ancestors[#ancestors] = parent
+      end
+    else
+      table.insert(ancestors, parent)
+      last_row = s_row
+      last_col = s_col
+    end
+    prev_parent = parent
+    parent = parent:parent()
+  end
+
+  return ancestors, last_row
+end
 function M.get_list_nodes_at_cursor(winid, config, needs_cursor_node)
   local cursor_range = util.get_cursor_range(winid)
 
