@@ -8,5 +8,6 @@ M.flash_style = 'sequential'
 M.hl_flash = 'IncSearch'
 M.hl_grey_priority = 1000
 M.grey = 'enable'
+M.expand_key = 'z'
 
 return M
