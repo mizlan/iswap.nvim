@@ -39,8 +39,6 @@ end
 -- this also returns the cursor node index
 function M.get_list_node_at_cursor(winid, ignored_parents, config, needs_cursor_node)
   local ret = nil
-  local cursor = vim.api.nvim_win_get_cursor(winid)
-  local cursor_range = { cursor[1] - 1, cursor[2] }
   local iswap_list_captures = M.find(winid)
   if not iswap_list_captures then
     -- query not supported
@@ -48,11 +46,8 @@ function M.get_list_node_at_cursor(winid, ignored_parents, config, needs_cursor_
   end
   for id, node, metadata in iswap_list_captures do
     err('found node', config.debug)
-    local start_row, start_col, end_row, end_col = node:range()
-    local start = { start_row, start_col }
-    local end_ = { end_row, end_col }
     if not vim.tbl_contains(ignored_parents, node) then
-      if util.within(start, cursor_range, end_) and node:named_child_count() > 1 then
+      if util.node_contains_cursor(node, winid) and node:named_child_count() > 1 then
         local children = ts_utils.get_named_children(node)
         if needs_cursor_node then
           local cur_nodes = util.nodes_containing_cursor(children, winid)

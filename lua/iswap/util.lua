@@ -44,6 +44,12 @@ function M.node_contains_pos(node, pos)
   return M.within(s, pos, e)
 end
 
+function M.node_contains_cursor(node, winid)
+  local cursor = vim.api.nvim_win_get_cursor(winid)
+  local cursor_range = { cursor[1] - 1, cursor[2] }
+  return M.node_contains_pos(node, cursor_range)
+end
+
 function M.nodes_containing_pos(nodes, pos)
   local idxs = {}
   for i, node in ipairs(nodes) do
