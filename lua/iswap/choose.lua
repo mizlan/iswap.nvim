@@ -12,6 +12,7 @@ function M.two_nodes_from_list(config)
   local ignored_parents = {}
 
   ::expand_list::
+  -- TODO: repeating this completely is inefficient? find all list nodes in advance and loop
   local parent, children = internal.get_list_node_at_cursor(winid, ignored_parents, config)
   if not parent then
     err('did not find a satisfiable parent node', config.debug)
@@ -57,6 +58,7 @@ function M.one_other_node_from_list(direction, config)
   local ignored_parents = {}
 
   ::expand_list::
+  -- TODO: repeating this completely is inefficient? find all list nodes in advance and loop
   local parent, children, cur_node_idx = internal.get_list_node_at_cursor(winid, ignored_parents, config, true)
   if not parent or not children or not cur_node_idx then
     err('did not find a satisfiable parent node', config.debug)

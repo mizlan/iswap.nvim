@@ -44,6 +44,9 @@ function M.node_contains_pos(node, pos)
   local e = {er, ec}
   return M.within(s, pos, e)
 end
+function M.node_contains_range(node, pos1, pos2)
+  return M.node_contains_pos(node, pos1) and M.node_contains_pos(node, pos2)
+end
 
 function M.node_contains_cursor(node, winid)
   local cursor = vim.api.nvim_win_get_cursor(winid)
@@ -75,6 +78,7 @@ function M.getchar_handler()
   return nil
 end
 
+function M.same_range(r1, r2) return r1[1] == r2[1] and r1[2] == r2[2] and r1[3] == r2[3] and r1[4] == r2[4] end
 
 function M.ancestors(cur_node, only_current_line, config)
   local parent = cur_node:parent()
@@ -112,6 +116,16 @@ function M.ancestors(cur_node, only_current_line, config)
   end
 
   return ancestors, last_row
+end
+
+-- Calls node:parent until the node differs in start or end
+function M.expand_node(node)
+  local range = { node:range() }
+  local parent = node:parent()
+  while M.same_range(range, { parent:range() }) do
+    parent = parent:parent()
+  end
+  return parent
 end
 
 return M
