@@ -110,43 +110,14 @@ function M.one_other_node_from_list(direction, config)
   return children, cur_node_idx, a_idx
 end
 
-function M.two_nodes_from_any(config)
+function M.ancestor_node_from_line(config)
   local winid = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_get_current_buf()
 
   local cur_node = ts_utils.get_node_at_cursor(winid)
-  local parent = cur_node:parent()
-
-  if not parent then
-    err('did not find a satisfiable parent node', config.debug)
+  local ancestors, last_row = util.ancestors(cur_node, config.only_current_line, config)
+  if not ancestors then
     return
-  end
-
-  -- pick parent recursive for current line
-  local ancestors = { cur_node }
-  local prev_parent = cur_node
-  local current_row = parent:start()
-  local last_row, last_col
-
-  -- only get parents - for current line
-  while parent and parent:start() == current_row do
-    last_row, last_col = prev_parent:start()
-    local s_row, s_col = parent:start()
-
-    if last_row == s_row and last_col == s_col then
-      -- new parent has same start as last one. Override last one
-      if util.has_siblings(parent) and parent:type() ~= 'comment' then
-        -- only add if it has >0 siblings and is not comment node
-        -- (override previous since same start position)
-        ancestors[#ancestors] = parent
-      end
-    else
-      table.insert(ancestors, parent)
-      last_row = s_row
-      last_col = s_col
-    end
-    prev_parent = parent
-    parent = parent:parent()
   end
 
   -- in left-to-right order for generating hints
@@ -168,7 +139,6 @@ function M.two_nodes_from_any(config)
   local picked_node = ancestors[user_input[1]] -- for swap
   local picked_parent = picked_node:parent()
   local children = ts_utils.get_named_children(picked_parent)
-  local sr, sc, er, ec = picked_parent:range()
 
   -- remove children if child:type() == 'comment'
   for i = #children, 1, -1 do
@@ -177,6 +147,16 @@ function M.two_nodes_from_any(config)
 
   -- nothing to swap here
   if #children < 2 then return end
+
+  return children, picked_node, picked_parent
+end
+
+function M.two_nodes_from_any(config)
+  local children, picked_node, picked_parent = M.ancestor_node_from_line(config)
+
+  local bufnr = vim.api.nvim_get_current_buf()
+  if children == nil or picked_node == nil or picked_parent == nil then return end
+  local sr, sc, er, ec = picked_parent:range()
 
   local swap_node, swap_node_idx, picked_node_idx
 
@@ -197,7 +177,7 @@ function M.two_nodes_from_any(config)
         break
       end
     end
-    user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
+    local user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
     if not (type(user_input) == 'table' and #user_input == 1) then
       err('did not get two valid user inputs', config.debug)
       return
@@ -214,94 +194,87 @@ function M.two_nodes_from_any(config)
   return children, picked_node_idx, swap_node_idx
 end
 
+
 function M.one_other_node_from_any(direction, config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
 
-  local cursor_node = ts_utils.get_node_at_cursor(winid)
-  local current_row, current_col = cursor_node:start()
-
-  -- find outer parent :=  its start() is same as cursor_node:start()
-  local last_valid_node = cursor_node
-  local outer_cursor_node = cursor_node:parent()
-  while outer_cursor_node do -- only get parents - for current line
-    local outer_row, outer_col = outer_cursor_node:start()
-    if outer_row ~= current_row or outer_col ~= current_col then -- new outer parent to have same start()
-      break
-    end
-    if direction == 'right' and outer_cursor_node:next_named_sibling() ~= nil then -- only select node if it has a right sibling
-      last_valid_node = outer_cursor_node
-    elseif direction == 'left' and outer_cursor_node:prev_named_sibling() ~= nil then -- or left sibling
-      last_valid_node = outer_cursor_node
-    elseif (direction == nil or direction == false) and util.has_siblings(outer_cursor_node) then -- if no direction, then node with any sibling is ok
-      last_valid_node = outer_cursor_node
-    end
-    outer_cursor_node = outer_cursor_node:parent()
-  end
-
-  outer_cursor_node = last_valid_node
-
-  local outer_parent = outer_cursor_node:parent()
-  if outer_parent == nil then
-    err('No siblings found for swap', config.debug)
-    return
-  end
-  local children = ts_utils.get_named_children(outer_parent)
-  local sr, sc, er, ec = outer_parent:range()
-
-  -- nothing to swap here
-  if #children < 2 then return end
-
-  -- a and b are the nodes to swap
-  local swap_node, swap_node_idx, outer_cursor_node_idx
-
-  if config.autoswap and #children == 2 then -- auto swap outer_cursor_node with other sibling
-    if children[1] == outer_cursor_node then
-      swap_node = children[2]
-      swap_node_idx = 2
-      outer_cursor_node_idx = 1
-    else
-      swap_node = children[1]
-      swap_node_idx = 1
-      outer_cursor_node_idx = 2
-    end
-  else -- draw picker
-    for i, child in ipairs(children) do
-      if child == outer_cursor_node then
-        outer_cursor_node_idx = i
-        break
-      end
-    end
-    if direction == 'right' then
-      swap_node = outer_cursor_node:next_named_sibling()
-      swap_node_idx = outer_cursor_node_idx + 1
-      while swap_node ~= nil and swap_node:type() == 'comment' do
-        swap_node = swap_node:next_named_sibling()
-        swap_node_idx = swap_node_idx + 1
-      end
-    elseif direction == 'left' then
-      swap_node = outer_cursor_node:prev_named_sibling()
-      swap_node_idx = outer_cursor_node_idx - 1
-      while swap_node ~= nil and swap_node:type() == 'comment' do
-        swap_node = swap_node:prev_named_sibling()
-        swap_node_idx = swap_node_idx - 1
-      end
-    else
-      local user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
-      if not (type(user_input) == 'table' and #user_input == 1) then
-        err('did not get two valid user inputs', config.debug)
-        return
-      end
-      swap_node_idx = user_input[1]
-      swap_node = children[swap_node_idx]
-    end
-  end
-
-  if swap_node == nil then
-    err('no node to swap with', config.debug)
+  local cur_node = ts_utils.get_node_at_cursor(winid)
+  local ancestors, last_row = util.ancestors(cur_node, config.only_current_line, config)
+  if not ancestors then
     return
   end
 
-  return children, outer_cursor_node_idx, swap_node_idx
+  for _, ancestor in ipairs(ancestors) do
+    err("Found Node", config.debug)
+    local parent = ancestor:parent()
+    if parent == nil then
+      err('No parent found for swap', config.debug)
+      goto continue
+    end
+    local children = ts_utils.get_named_children(parent)
+
+    -- nothing to swap here
+    if #children < 2 then
+      err('No siblings found for swap', config.debug)
+      goto continue
+    end
+
+    local sr, sc, er, ec = parent:range()
+
+    -- a and b are the nodes to swap
+    local swap_node, swap_node_idx, ancestor_idx
+
+    if config.autoswap and #children == 2 then -- auto swap ancestor with other sibling
+      if children[1] == ancestor then
+        swap_node = children[2]
+        swap_node_idx = 2
+        ancestor_idx = 1
+      else
+        swap_node = children[1]
+        swap_node_idx = 1
+        ancestor_idx = 2
+      end
+    else -- draw picker
+      for i, child in ipairs(children) do
+        if child == ancestor then
+          ancestor_idx = i
+          break
+        end
+      end
+      if direction == 'right' then
+        swap_node = ancestor:next_named_sibling()
+        swap_node_idx = ancestor_idx + 1
+        while swap_node ~= nil and swap_node:type() == 'comment' do
+          swap_node = swap_node:next_named_sibling()
+          swap_node_idx = swap_node_idx + 1
+        end
+      elseif direction == 'left' then
+        swap_node = ancestor:prev_named_sibling()
+        swap_node_idx = ancestor_idx - 1
+        while swap_node ~= nil and swap_node:type() == 'comment' do
+          swap_node = swap_node:prev_named_sibling()
+          swap_node_idx = swap_node_idx - 1
+        end
+      else
+        local user_input, user_keys = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
+        if not (type(user_input) == 'table' and #user_input == 1) then
+          if user_keys[1] == config.expand_key then
+            goto continue
+          end
+          err('did not get two valid user inputs', config.debug)
+          return
+        end
+        swap_node_idx = user_input[1]
+        swap_node = children[swap_node_idx]
+      end
+    end
+
+    if swap_node ~= nil then
+      return children, ancestor_idx, swap_node_idx
+    end
+
+    ::continue::
+  end
 end
 return M
