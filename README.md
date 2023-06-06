@@ -47,6 +47,8 @@ will 'move' the node to the chosen position, rather than swapping. This is
 equivalent to swapping the first node with all of the nodes up to and including
 the second node.
 
+For `I(Swap|Move)(With)?` you can bind it to a key in visual mode to influence node selection. The list node, 
+
 ## configuration
 
 In your `init.lua`:

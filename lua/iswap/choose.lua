@@ -11,7 +11,8 @@ function M.two_nodes_from_list(config)
 
   local lists = internal.get_list_nodes_at_cursor(winid, config, false)
   if lists == nil then return end
-  for _, list in ipairs(util.tbl_reverse(lists)) do
+  err('found n lists: ' .. #lists, config.debug)
+  for _, list in ipairs(lists) do
     local parent, children = unpack(list)
     if not parent then
       err('did not find a satisfiable parent node', config.debug)
@@ -51,7 +52,7 @@ function M.one_other_node_from_list(direction, config)
 
   local lists = internal.get_list_nodes_at_cursor(winid, config, true)
   if lists == nil then return end
-  for _, list in ipairs(util.tbl_reverse(lists)) do
+  for _, list in ipairs(lists) do
     local parent, children, cur_node_idx = unpack(list)
 
     if not parent or not children or not cur_node_idx then

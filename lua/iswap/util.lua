@@ -37,6 +37,15 @@ function M.within(a, b, c)
     return M.compare_position(a, b) and M.compare_position(b, c)
   end
 end
+function M.intersects(a, b, c)
+  if #b == 4 then
+    local b1 = { b[1], b[2] }
+    local b2 = { b[3], b[4] }
+    return not M.compare_position(c, b1) and not M.compare_position(b2, a)
+  else
+    return M.within(a, b, c)
+  end
+end
 
 local feedkeys = vim.api.nvim_feedkeys
 local termcodes = vim.api.nvim_replace_termcodes
@@ -54,21 +63,46 @@ function M.get_cursor_range(winid)
   end
 end
 
+function M.pos_to_range(pos)
+  local range = vim.deepcopy(pos)
+  if #range == 2 then
+    range[3] = pos[1]
+    range[4] = pos[2]
+  end
+  return range
+end
+
 -- pos is in form {r, c}
-function M.node_contains_pos(node, pos)
+function M.node_contains_range(node, pos)
   local sr, sc, er, ec = node:range()
   local s = {sr, sc}
   local e = {er, ec}
   return M.within(s, pos, e)
 end
-function M.node_contains_range(node, pos1, pos2)
-  return M.node_contains_pos(node, pos1) and M.node_contains_pos(node, pos2)
+function M.node_intersects_range(node, pos)
+  local sr, sc, er, ec = node:range()
+  local s = { sr, sc }
+  local e = { er, ec }
+  return M.intersects(s, pos, e)
+end
+function M.range_contains_node(node, pos)
+  local sr, sc, er, ec = unpack(M.pos_to_range(pos))
+  local s = { sr, sc }
+  local e = { er, ec }
+  return M.within(s, { node:range() }, e)
 end
 
-function M.nodes_containing_pos(nodes, pos)
+function M.nodes_containing_range(nodes, pos)
   local idxs = {}
   for i, node in ipairs(nodes) do
-    if M.node_contains_pos(node, pos) then
+    if M.node_contains_range(node, pos) then table.insert(idxs, i) end
+  end
+  return idxs
+end
+function M.range_containing_nodes(nodes, range)
+  local idxs = {}
+  for i, node in ipairs(nodes) do
+    if M.range_contains_node(node, range) then
       table.insert(idxs, i)
     end
   end
