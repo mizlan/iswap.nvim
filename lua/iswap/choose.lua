@@ -109,7 +109,7 @@ function M.ancestor_node_from_line(config)
   local bufnr = vim.api.nvim_get_current_buf()
 
   local cur_node = ts_utils.get_node_at_cursor(winid)
-  local ancestors, last_row = util.ancestors(cur_node, config.only_current_line, config)
+  local ancestors, last_row = internal.get_ancestors_at_cursor(cur_node, config.only_current_line, config)
   if not ancestors then return end
 
   -- in left-to-right order for generating hints
@@ -191,7 +191,7 @@ function M.one_other_node_from_any(direction, config)
   local winid = vim.api.nvim_get_current_win()
 
   local cur_node = ts_utils.get_node_at_cursor(winid)
-  local ancestors = util.ancestors(cur_node, config.only_current_line, config)
+  local ancestors = internal.get_ancestors_at_cursor(cur_node, config.only_current_line, config)
   if not ancestors then return end
 
   for _, ancestor in ipairs(ancestors) do
