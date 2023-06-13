@@ -65,11 +65,13 @@ function M.iswap(config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local a, b = internal.choose_two_nodes_from_list(config)
+  local children, a_idx, b_idx = internal.choose_two_nodes_from_list(config)
 
-  local a_range, b_range = unpack(internal.swap_nodes_and_return_new_ranges(a, b, bufnr, false))
+  if children then
+    local ranges = internal.swap_nodes_and_return_new_ranges(children[a_idx], children[b_idx], bufnr, false)
 
-  ui.flash_confirm(bufnr, { a_range, b_range }, config)
+    ui.flash_confirm(bufnr, ranges, config)
+  end
 
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
 end
@@ -78,11 +80,13 @@ function M.imove(config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local a, b, children, a_idx, b_idx = internal.choose_two_nodes_from_list(config)
+  local children, a_idx, b_idx = internal.choose_two_nodes_from_list(config)
 
-  local a_range, b_range = unpack(internal.move_node_to_index(children, a, a_idx, bufnr, b_idx, config))
+  if children then
+    local ranges = internal.move_node_to_index(children, a_idx, b_idx, config)
 
-  ui.flash_confirm(bufnr, { a_range, b_range }, config)
+    ui.flash_confirm(bufnr, ranges, config)
+  end
 
   vim.cmd([[silent! call repeat#set("\<Plug>IMoveNormal", -1)]])
 end
@@ -272,40 +276,36 @@ function M.iswap_node(config)
   vim.cmd([[silent! call repeat#set("\<Plug>ISwapNormal", -1)]])
 end
 
--- TODO: refactor iswap() and iswap_with()
--- swap current with one other node
 function M.imove_with(direction, config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local cur_node, a, children, cur_node_idx, a_idx = internal.choose_one_other_node_from_list(direction, config)
+  local children, cur_node_idx, a_idx = internal.choose_one_other_node_from_list(direction, config)
 
-  local a_range, b_range
-  if not a_idx  then
-    -- This means the node is adjacent, swap and move are equivalent
-    a_range, b_range = unpack(internal.swap_nodes_and_return_new_ranges(cur_node, a, bufnr, config.move_cursor))
-  else
-    table.insert(children, cur_node_idx, cur_node)
-    if cur_node_idx <= a_idx then a_idx = a_idx + 1 end
-    a_range, b_range = unpack(internal.move_node_to_index(children, cur_node, cur_node_idx, bufnr, a_idx, config))
+  if children then
+    local ranges = internal.move_node_to_index(children, cur_node_idx, a_idx, config)
+
+    ui.flash_confirm(bufnr, ranges, config)
   end
-
-  ui.flash_confirm(bufnr, { a_range, b_range }, config)
 
   vim.cmd([[silent! call repeat#set("\<Plug>IMoveWith", -1)]])
 end
 
+-- TODO: refactor iswap() and iswap_with()
+-- swap current with one other node
 function M.iswap_with(direction, config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local cur_node, a = internal.choose_one_other_node_from_list(direction, config)
+  local children, cur_node_idx, a_idx = internal.choose_one_other_node_from_list(direction, config)
+  if children then
+    local ranges =
+      internal.swap_nodes_and_return_new_ranges(children[cur_node_idx], children[a_idx], bufnr, config.move_cursor)
 
-  local a_range, b_range = unpack(internal.swap_nodes_and_return_new_ranges(cur_node, a, bufnr, config.move_cursor))
+    ui.flash_confirm(bufnr, ranges, config)
+  end
 
-  ui.flash_confirm(bufnr, { a_range, b_range }, config)
-
-    vim.cmd([[silent! call repeat#set("\<Plug>ISwapWith", -1)]])
+  vim.cmd([[silent! call repeat#set("\<Plug>ISwapWith", -1)]])
 end
 
 return M

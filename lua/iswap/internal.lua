@@ -170,9 +170,15 @@ function M.swap_ranges_and_return_new_ranges(a, b, bufnr, should_move_cursor)
   return { a_data, b_data }
 end
 
-function M.move_node_to_index(children, cur_node, cur_node_idx, bufnr, a_idx, config)
+function M.move_node_to_index(children, cur_node_idx, a_idx, config)
+  local bufnr = vim.api.nvim_get_current_buf()
+  if a_idx == cur_node_idx + 1 or a_idx == cur_node_idx - 1 then
+    -- This means the node is adjacent, swap and move are equivalent
+    return M.swap_nodes_and_return_new_ranges(children[cur_node_idx], children[a_idx], bufnr, config.move_cursor)
+  end
+
   local children_ranges = vim.tbl_map(function(node) return { node:range() } end, children)
-  local cur_range = { cur_node:range() }
+  local cur_range = children_ranges[cur_node_idx]
 
   local incr = (cur_node_idx < a_idx) and 1 or -1
   local ret_a, ret_b
@@ -216,6 +222,7 @@ function M.choose_two_nodes_from_list(config)
   -- and default to prompting for user input
   if config.autoswap and #children == 2 then
     a, b = unpack(children)
+    a_idx, b_idx = 1, 2
   else
     local user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 2)
     if not (type(user_input) == 'table' and #user_input == 2) then
@@ -231,7 +238,7 @@ function M.choose_two_nodes_from_list(config)
     return
   end
 
-  return a, b, children, a_idx, b_idx
+  return children, a_idx, b_idx
 end
 
 function M.choose_one_other_node_from_list(direction, config)
@@ -256,12 +263,15 @@ function M.choose_one_other_node_from_list(direction, config)
   -- and default to prompting for user input
   if config.autoswap and #children == 1 then
     a = children[1]
+    a_idx = 1
   else
     if direction == 'left' then
       a = children[cur_node_idx - 1]
+      a_idx = cur_node_idx - 1
     elseif direction == 'right' then
       -- already shifted over, no need for +1
       a = children[cur_node_idx]
+      a_idx = cur_node_idx
     else
       local user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
       if not (type(user_input) == 'table' and #user_input == 1) then
@@ -278,7 +288,11 @@ function M.choose_one_other_node_from_list(direction, config)
     return
   end
 
-  return cur_node, a, children, cur_node_idx, a_idx
+  -- restore cur_node into the correct position in children (and adjust indices)
+  table.insert(children, cur_node_idx, cur_node)
+  if cur_node_idx <= a_idx then a_idx = a_idx + 1 end
+
+  return children, cur_node_idx, a_idx
 end
 
 return M
