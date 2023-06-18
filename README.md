@@ -33,6 +33,11 @@ picks the cursor element automatically as one of the elements.
 `:ISwapNodeWith{Left,Right}` are provided as shortcuts to swap the cursor node
 with its immediate left and right node respectively.
 
+For all of the above commands, there is an equivalent `:IMove*` command that
+will 'move' the node to the chosen position, rather than swapping. This is
+equivalent to swapping the first node with all of the nodes up to and including
+the second node.
+
 ## configuration
 
 In your `init.lua`:
