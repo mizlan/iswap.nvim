@@ -62,7 +62,7 @@ function M.one_other_node_from_list(direction, config)
 
     -- enable autoswapping with one other child
     -- and default to prompting for user input
-    if config.autoswap and #children == 1 then
+    if config.autoswap and #children == 2 then
       a_idx = 3 - cur_node_idx -- 2<->1
     else
       if direction == 'left' then
