@@ -11,7 +11,13 @@ function M.two_nodes_from_list(config)
 
   local lists = internal.get_list_nodes_at_cursor(winid, config, false)
   if lists == nil then return end
-  for _, list in ipairs(lists) do
+  local list_index = 0
+  while true do
+    list_index = list_index + 1
+    if list_index == 0 then list_index = #lists end
+    if list_index > #lists then list_index = 1 end
+    local list = lists[list_index]
+
     local parent, children = unpack(list)
     if not parent then
       err('did not find a satisfiable parent node', config.debug)
@@ -30,6 +36,7 @@ function M.two_nodes_from_list(config)
       local user_input, user_keys = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 2)
       if not (type(user_input) == 'table' and #user_input == 2) then
         if user_keys[1] == config.expand_key then goto continue end
+        if user_keys[1] == config.shrink_key then goto continue_prev end
         err('did not get two valid user inputs', config.debug)
         return
       end
@@ -38,6 +45,8 @@ function M.two_nodes_from_list(config)
 
     if children[a_idx] ~= nil and children[b_idx] ~= nil then return children, a_idx, b_idx end
     err('some of the nodes were nil', config.debug)
+    ::continue_prev::
+    list_index = list_index - 2
     ::continue::
   end
 end
@@ -48,7 +57,13 @@ function M.one_other_node_from_list(direction, config)
 
   local lists = internal.get_list_nodes_at_cursor(winid, config, true)
   if lists == nil then return end
-  for _, list in ipairs(lists) do
+  local list_index = 0
+  while true do
+    list_index = list_index + 1
+    if list_index == 0 then list_index = #lists end
+    if list_index > #lists then list_index = 1 end
+    local list = lists[list_index]
+
     local parent, children, cur_node_idx = unpack(list)
     if not parent or not children or not cur_node_idx then
       err('did not find a satisfiable parent node', config.debug)
@@ -75,6 +90,7 @@ function M.one_other_node_from_list(direction, config)
         local user_input, user_keys = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
         if not (type(user_input) == 'table' and #user_input == 1) then
           if user_keys[1] == config.expand_key then goto continue end
+          if user_keys[1] == config.shrink_key then goto continue_prev end
           err('did not get a valid user input', config.debug)
           return
         end
@@ -89,6 +105,8 @@ function M.one_other_node_from_list(direction, config)
     if children[a_idx] ~= nil then return children, cur_node_idx, a_idx end
     err('the node was nil', config.debug)
 
+    ::continue_prev::
+    list_index = list_index - 2
     ::continue::
   end
 end
@@ -186,7 +204,13 @@ function M.one_other_node_from_any(direction, config)
   local ancestors = internal.get_ancestors_at_cursor(cur_node, config.only_current_line, config)
   if not ancestors then return end
 
-  for _, ancestor in ipairs(ancestors) do
+
+  local ancestor_index = 0
+  while true do
+    ancestor_index = ancestor_index + 1
+    if ancestor_index == 0 then ancestor_index = #ancestors end
+    if ancestor_index > #ancestors then ancestor_index = 1 end
+    local ancestor = ancestors[ancestor_index]
     err('Found Node', config.debug)
     local parent = ancestor:parent()
     if parent == nil then
@@ -243,6 +267,7 @@ function M.one_other_node_from_any(direction, config)
         local user_input, user_keys = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
         if not (type(user_input) == 'table' and #user_input == 1) then
           if user_keys[1] == config.expand_key then goto continue end
+          if user_keys[1] == config.shrink_key then goto continue_prev end
           err('did not get two valid user inputs', config.debug)
           return
         end
@@ -256,6 +281,9 @@ function M.one_other_node_from_any(direction, config)
 
     if swap_node ~= nil then return children, ancestor_idx, swap_node_idx end
     err('no node to swap with', config.debug)
+
+    ::continue_prev::
+    ancestor_index = ancestor_index - 2
     ::continue::
   end
 end
