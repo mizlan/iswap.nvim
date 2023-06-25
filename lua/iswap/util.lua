@@ -128,6 +128,12 @@ function M.node_is_range(node, range)
   return a == range[1] and b == range[2] and c == range[3] and d == range[4]
 end
 
-
+function M.join_lists(lists)
+  local total = {}
+  for _, list in ipairs(lists) do
+    vim.list_extend(total, list)
+  end
+  return total
+end
 
 return M
