@@ -30,20 +30,6 @@ function M.find(winid, cursor_range)
   return q:iter_captures(root, bufnr, sr, er)
 end
 
--- Get the closest parent that can be used as a list wherein elements can be
--- swapped.
--- ignored_parents is a list of parent nodes that should be skipped (allows controlling nested list selection)
--- needs_cursor_node is a boolean indicating whether we require that the cursor
--- be on a named child of the list node
--- this also returns the cursor node index
-function M.get_list_node_at_cursor(winid, ignored_parents, config, needs_cursor_node)
-  local lists = M.get_list_nodes_at_cursor(winid, config, needs_cursor_node)
-  if not lists then return end
-  lists = vim.tbl_filter(function(node) return vim.tbl_contains(ignored_parents, node) end, lists)
-  -- last node is generally(always?) the smallest
-  return lists[#lists]
-end
-
 -- Returns ancestors from inside to outside
 function M.get_ancestors_at_cursor(cur_node, only_current_line, config)
   local parent = cur_node:parent()
@@ -80,7 +66,19 @@ function M.get_ancestors_at_cursor(cur_node, only_current_line, config)
     parent = parent:parent()
   end
 
-  return ancestors, last_row
+  -- TODO: use the list query to find initial chosen ancestor
+  local initial = 1
+  local lists = M.get_list_nodes_at_cursor(vim.api.nvim_get_current_win(), config, true)
+  if lists and #lists >= 1 then
+    for j, ancestor in ipairs(ancestors) do
+      if ancestor:parent() and ancestor:parent() == lists[1][1] then
+        initial = j
+        err('found list ancestor', config.debug)
+      end
+    end
+  end
+
+  return ancestors, last_row, initial
 end
 
 -- returns list_nodes

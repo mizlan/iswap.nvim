@@ -225,11 +225,11 @@ function M.one_other_node_from_any(direction, config)
   local winid = vim.api.nvim_get_current_win()
 
   local cur_node = ts_utils.get_node_at_cursor(winid)
-  local ancestors = internal.get_ancestors_at_cursor(cur_node, config.only_current_line, config)
+  local ancestors, _, list_index = internal.get_ancestors_at_cursor(cur_node, config.only_current_line, config)
   if not ancestors then return end
 
 
-  local list_index = 0
+  list_index = list_index - 1
   while true do
     list_index = list_index + 1
     if list_index == 0 then list_index = #ancestors end
