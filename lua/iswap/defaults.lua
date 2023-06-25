@@ -8,10 +8,10 @@ M.flash_style = 'sequential'
 M.hl_flash = 'IncSearch'
 M.hl_grey_priority = 1000
 M.grey = 'enable'
-M.expand_key = 'z'
+M.expand_key = ';'
+M.shrink_key = ','
 M.autoswap = false
 M.only_current_line = true
 M.visual_select_list = true
-
 
 return M

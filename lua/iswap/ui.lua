@@ -81,7 +81,7 @@ function M.flash_confirm_simul(bufnr, ranges, config)
 end
 
 function M.flash_confirm_sequential(bufnr, ranges, config)
-  function helper(idx)
+  local function helper(idx)
     M.clear_namespace(bufnr)
     if idx > #ranges then return end
     local sr, sc, er, ec = unpack(ranges[idx])
