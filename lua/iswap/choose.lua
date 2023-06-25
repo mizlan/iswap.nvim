@@ -33,18 +33,34 @@ function M.two_nodes_from_list(config)
     if config.autoswap and #children == 2 then
       a_idx, b_idx = 1, 2
     else
-      local user_input, user_keys = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 2)
-      if not (type(user_input) == 'table' and #user_input == 2) then
+      local children_and_parents = config.label_parents and
+          util.join_lists({ children, vim.tbl_map(function(l) return l[1] end, lists) })
+          or children
+
+      local user_input, user_keys = ui.prompt(bufnr, config, children_and_parents, { { sr, sc }, { er, ec } }, 1, #children)
+      if not (type(user_input) == 'table' and #user_input == 1) then
         if user_keys[1] == config.expand_key then goto continue end
         if user_keys[1] == config.shrink_key then goto continue_prev end
         err('did not get two valid user inputs', config.debug)
         return
       end
-      a_idx, b_idx = unpack(user_input)
+      a_idx = user_input[1]
+      if a_idx > #children then
+        list_index = a_idx - #children - 1
+        goto continue
+      end
+
+      local user_input, user_keys = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
+      if not (type(user_input) == 'table' and #user_input == 1) then
+        err('did not get two valid user inputs', config.debug)
+        return
+      end
+      b_idx = user_input[1]
     end
 
     if children[a_idx] ~= nil and children[b_idx] ~= nil then return children, a_idx, b_idx end
     err('some of the nodes were nil', config.debug)
+
     ::continue_prev::
     list_index = list_index - 2
     ::continue::
@@ -87,7 +103,11 @@ function M.one_other_node_from_list(direction, config)
       else
         local cur_node = table.remove(children, cur_node_idx)
 
-        local user_input, user_keys = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
+        local children_and_parents = config.label_parents and
+            util.join_lists({ children, vim.tbl_map(function(l) return l[1] end, lists) })
+            or children
+
+        local user_input, user_keys = ui.prompt(bufnr, config, children_and_parents, { { sr, sc }, { er, ec } }, 1, #children)
         if not (type(user_input) == 'table' and #user_input == 1) then
           if user_keys[1] == config.expand_key then goto continue end
           if user_keys[1] == config.shrink_key then goto continue_prev end
@@ -95,6 +115,10 @@ function M.one_other_node_from_list(direction, config)
           return
         end
         a_idx = user_input[1]
+        if a_idx > #children then
+          list_index = a_idx - #children - 1
+          goto continue
+        end
 
         -- restore cur_node into the correct position in children (and adjust indices)
         table.insert(children, cur_node_idx, cur_node)
@@ -205,12 +229,12 @@ function M.one_other_node_from_any(direction, config)
   if not ancestors then return end
 
 
-  local ancestor_index = 0
+  local list_index = 0
   while true do
-    ancestor_index = ancestor_index + 1
-    if ancestor_index == 0 then ancestor_index = #ancestors end
-    if ancestor_index > #ancestors then ancestor_index = 1 end
-    local ancestor = ancestors[ancestor_index]
+    list_index = list_index + 1
+    if list_index == 0 then list_index = #ancestors end
+    if list_index > #ancestors then list_index = 1 end
+    local ancestor = ancestors[list_index]
     err('Found Node', config.debug)
     local parent = ancestor:parent()
     if parent == nil then
@@ -264,7 +288,10 @@ function M.one_other_node_from_any(direction, config)
       else
         table.remove(children, ancestor_idx)
 
-        local user_input, user_keys = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
+        local children_and_parents = config.label_parents and
+        util.join_lists({ children, vim.tbl_map(function(node) return node:parent() end, ancestors) }) or children
+
+        local user_input, user_keys = ui.prompt(bufnr, config, children_and_parents, { { sr, sc }, { er, ec } }, 1, #children)
         if not (type(user_input) == 'table' and #user_input == 1) then
           if user_keys[1] == config.expand_key then goto continue end
           if user_keys[1] == config.shrink_key then goto continue_prev end
@@ -272,18 +299,22 @@ function M.one_other_node_from_any(direction, config)
           return
         end
         swap_node_idx = user_input[1]
-        swap_node = children[swap_node_idx]
+        if swap_node_idx > #children then
+          list_index = swap_node_idx - #children - 1
+          goto continue
+        end
+
 
         table.insert(children, ancestor_idx, ancestor)
         if ancestor_idx <= swap_node_idx then swap_node_idx = swap_node_idx + 1 end
       end
     end
 
-    if swap_node ~= nil then return children, ancestor_idx, swap_node_idx end
+    if children[swap_node_idx] ~= nil then return children, ancestor_idx, swap_node_idx end
     err('no node to swap with', config.debug)
 
     ::continue_prev::
-    ancestor_index = ancestor_index - 2
+    list_index = list_index - 2
     ::continue::
   end
 end

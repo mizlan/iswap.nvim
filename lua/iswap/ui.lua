@@ -24,7 +24,7 @@ end
 -- Prompt user from NODES a total of TIMES times in BUFNR. CONFIG is used for
 -- customization and ACTIVE_RANGE looks like {{row, col}, {row, col}} and is
 -- used only to determine where to grey out
-function M.prompt(bufnr, config, nodes, active_range, times)
+function M.prompt(bufnr, config, nodes, active_range, times, parents_after)
   local keys = config.keys
   if #nodes > #keys then
     -- TODO: do something about this
@@ -42,23 +42,29 @@ function M.prompt(bufnr, config, nodes, active_range, times)
   for i, node in ipairs(nodes) do
     local key = keys:sub(i, i)
     imap[key] = i
-    ts_utils.highlight_node(node, bufnr, M.iswap_ns, config.hl_selection)
+    local after = parents_after and (i <= parents_after)
+    if after then ts_utils.highlight_node(node, bufnr, M.iswap_ns, config.hl_selection) end
     local start_row, start_col = node:range()
     vim.api.nvim_buf_set_extmark(bufnr, M.iswap_ns, start_row, start_col,
-      { virt_text = { { key, config.hl_snipe } }, virt_text_pos = "overlay", hl_mode = "blend" })
+      {
+        virt_text = { { key, after and config.hl_snipe or config.hl_parent } },
+        virt_text_pos = after and config.label_snipe_style or config.label_parent_style,
+        hl_mode = "blend",
+      })
   end
   vim.cmd('redraw')
 
   local ires = {}
-  local keys = {}
+  local ikeys = {}
   for _ = 1, times do
     local keystr = util.getchar_handler()
-    table.insert(keys, keystr)
+    table.insert(ikeys, keystr)
     if keystr == nil or imap[keystr] == nil then break end
     table.insert(ires, imap[keystr])
+    if parents_after and imap[keystr] > parents_after then break end
   end
   M.clear_namespace(bufnr)
-  return ires, keys
+  return ires, ikeys
 end
 
 -- RANGES is a list of RANGE where RANGE is like
