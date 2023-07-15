@@ -225,6 +225,7 @@ function M.one_other_node_from_any(direction, config)
   local winid = vim.api.nvim_get_current_win()
 
   local cur_node = ts_utils.get_node_at_cursor(winid)
+  if cur_node == nil then return end
   local ancestors, _, list_index = internal.get_ancestors_at_cursor(cur_node, config.only_current_line, config)
   if not ancestors then return end
 
