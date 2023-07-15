@@ -28,10 +28,10 @@ function M.prompt(bufnr, config, nodes, active_range, times, parents_after)
   local keys = config.keys
   if #nodes > #keys then
     if parents_after and parents_after > #keys then
-    -- TODO: do something about this
-    -- too many nodes, not enough keys, and I don't want to start using prefixes
-    err('Too many nodes but not enough keys!', true)
-    return
+      -- TODO: do something about this
+      -- too many nodes, not enough keys, and I don't want to start using prefixes
+      err('Too many nodes but not enough keys!', true)
+      return
     else
       err('Too many nodes, but can exclude parents', true)
     end
