@@ -31,8 +31,8 @@ function M.find(winid, cursor_range)
 end
 
 -- Returns ancestors from inside to outside
-function M.get_ancestors_at_cursor(cur_node, only_current_line, config)
-  local parent = cur_node:parent()
+function M.get_ancestors_at_cursor(cur_node, only_current_line, config, needs_cursor_node)
+  local parent = cur_node -- :parent()
 
   if not parent then
     err('did not find a satisfiable parent node', config.debug)
@@ -84,7 +84,7 @@ function M.get_ancestors_at_cursor(cur_node, only_current_line, config)
 
   local initial = 1
   local list_indices = {}
-  local lists = M.get_list_nodes_at_cursor(vim.api.nvim_get_current_win(), config, true)
+  local lists = M.get_list_nodes_at_cursor(vim.api.nvim_get_current_win(), config, needs_cursor_node)
   if lists and #lists >= 1 then
     for j, ancestor in ipairs(ancestors) do
       if ancestor:parent() and ancestor:parent() == lists[1][1] then
@@ -243,11 +243,11 @@ function M.swap_ranges_and_return_new_ranges(a, b, bufnr, should_move_cursor)
   return { a_data, b_data }
 end
 
-function M.move_node_to_index(children, cur_node_idx, a_idx, config)
+function M.move_node_to_index(children, cur_node_idx, a_idx, should_move_cursor)
   local bufnr = vim.api.nvim_get_current_buf()
   if a_idx == cur_node_idx + 1 or a_idx == cur_node_idx - 1 then
     -- This means the node is adjacent, swap and move are equivalent
-    return M.swap_nodes_and_return_new_ranges(children[cur_node_idx], children[a_idx], bufnr, config.move_cursor)
+    return M.swap_nodes_and_return_new_ranges(children[cur_node_idx], children[a_idx], bufnr, should_move_cursor)
   end
 
   local children_ranges = vim.tbl_map(function(node) return { node:range() } end, children)
@@ -256,7 +256,7 @@ function M.move_node_to_index(children, cur_node_idx, a_idx, config)
   local incr = (cur_node_idx < a_idx) and 1 or -1
   for i = cur_node_idx + incr, a_idx, incr do
     local _, b_range =
-      unpack(M.swap_ranges_and_return_new_ranges(cur_range, children_ranges[i], bufnr, config.move_cursor))
+      unpack(M.swap_ranges_and_return_new_ranges(cur_range, children_ranges[i], bufnr, should_move_cursor))
     cur_range = b_range
   end
 
