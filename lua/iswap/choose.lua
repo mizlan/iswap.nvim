@@ -236,19 +236,8 @@ function M.one_other_node_from_any(direction, config)
     if list_index == 0 then list_index = #ancestors end
     if list_index > #ancestors then list_index = 1 end
     local ancestor = ancestors[list_index]
-    err('Found Node', config.debug)
     local parent = ancestor:parent()
-    if parent == nil then
-      err('No parent found for swap', config.debug)
-      goto continue
-    end
     local children = ts_utils.get_named_children(parent)
-
-    -- nothing to swap here
-    if #children < 2 then
-      err('No siblings found for swap', config.debug)
-      goto continue
-    end
 
     local sr, sc, er, ec = parent:range()
 

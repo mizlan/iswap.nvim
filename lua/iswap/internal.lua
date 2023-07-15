@@ -45,7 +45,6 @@ function M.get_ancestors_at_cursor(cur_node, only_current_line, config)
   local current_row = parent:start()
   local last_row, last_col
 
-  -- only get parents - for current line
   while parent and (not only_current_line or parent:start() == current_row) do
     last_row, last_col = prev_parent:start()
     local s_row, s_col = parent:start()
@@ -66,19 +65,37 @@ function M.get_ancestors_at_cursor(cur_node, only_current_line, config)
     parent = parent:parent()
   end
 
-  -- TODO: use the list query to find initial chosen ancestor
+  ancestors = vim.tbl_filter(function(ancestor)
+    local parent = ancestor:parent()
+    if parent == nil then
+      err('No parent found for swap', config.debug)
+      return false
+    end
+    local children = ts_utils.get_named_children(parent)
+
+    -- nothing to swap here
+    if #children < 2 then
+      err('No siblings found for swap', config.debug)
+      return false
+    end
+
+    return true
+  end, ancestors)
+
   local initial = 1
+  local list_indices = {}
   local lists = M.get_list_nodes_at_cursor(vim.api.nvim_get_current_win(), config, true)
   if lists and #lists >= 1 then
     for j, ancestor in ipairs(ancestors) do
       if ancestor:parent() and ancestor:parent() == lists[1][1] then
         initial = j
+        list_indices[#list_indices + 1] = j
         err('found list ancestor', config.debug)
       end
     end
   end
 
-  return ancestors, last_row, initial
+  return ancestors, last_row, initial, list_indices
 end
 
 -- returns list_nodes
