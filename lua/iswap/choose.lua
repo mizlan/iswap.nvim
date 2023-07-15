@@ -5,14 +5,23 @@ local internal = require('iswap.internal')
 local ui = require('iswap.ui')
 local err = util.err
 
+local function autoswap(config, iters)
+  if config.autoswap == true or config.autoswap == "always" then return true end
+  if config.autoswap == nil or config.autoswap == false then return false end
+  if config.autoswap == "after_label" then return iters ~= 1 end
+end
+
 function M.two_nodes_from_list(config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
+
+  local iters = 0
 
   local lists = internal.get_list_nodes_at_cursor(winid, config, false)
   if lists == nil then return end
   local list_index = 0
   while true do
+    iters = iters + 1
     list_index = list_index + 1
     if list_index == 0 then list_index = #lists end
     if list_index > #lists then list_index = 1 end
@@ -30,7 +39,7 @@ function M.two_nodes_from_list(config)
 
     -- enable autoswapping with two children
     -- and default to prompting for user input
-    if config.autoswap and #children == 2 then
+    if autoswap(config, iters) and #children == 2 then
       a_idx, b_idx = 1, 2
     else
       local children_and_parents = config.label_parents and
@@ -71,10 +80,13 @@ function M.one_other_node_from_list(direction, config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
 
+  local iters = 0
+
   local lists = internal.get_list_nodes_at_cursor(winid, config, true)
   if lists == nil then return end
   local list_index = 0
   while true do
+    iters = iters + 1
     list_index = list_index + 1
     if list_index == 0 then list_index = #lists end
     if list_index > #lists then list_index = 1 end
@@ -93,7 +105,7 @@ function M.one_other_node_from_list(direction, config)
 
     -- enable autoswapping with one other child
     -- and default to prompting for user input
-    if config.autoswap and #children == 2 then
+    if autoswap(config, iters) and #children == 2 then
       a_idx = 3 - cur_node_idx -- 2<->1
     else
       if direction == 'left' then
@@ -140,6 +152,8 @@ function M.nodes_from_any(direction, config)
   local winid = vim.api.nvim_get_current_win()
   local select_two_nodes = direction == 2
 
+  local iters = 0
+
   local cur_node = ts_utils.get_node_at_cursor(winid)
   if cur_node == nil then return end
   local ancestors, _, list_index = internal.get_ancestors_at_cursor(cur_node, config.only_current_line, config)
@@ -148,6 +162,7 @@ function M.nodes_from_any(direction, config)
 
   list_index = list_index - 1
   while true do
+    iters = iters + 1
     list_index = list_index + 1
     if list_index == 0 then list_index = #ancestors end
     if list_index > #ancestors then list_index = 1 end
@@ -160,7 +175,7 @@ function M.nodes_from_any(direction, config)
     -- a and b are the nodes to swap
     local swap_node, swap_node_idx, ancestor_idx
 
-    if config.autoswap and #children == 2 then -- auto swap ancestor with other sibling
+    if autoswap(config, iters) and #children == 2 then -- auto swap ancestor with other sibling
       if children[1] == ancestor then
         swap_node = children[2]
         swap_node_idx = 2
