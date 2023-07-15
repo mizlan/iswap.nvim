@@ -135,94 +135,10 @@ function M.one_other_node_from_list(direction, config)
   end
 end
 
-function M.ancestor_node_from_line(config)
-  local winid = vim.api.nvim_get_current_win()
-  local bufnr = vim.api.nvim_get_current_buf()
-
-  local cur_node = ts_utils.get_node_at_cursor(winid)
-  local ancestors, last_row = internal.get_ancestors_at_cursor(cur_node, config.only_current_line, config)
-  if not ancestors then return end
-
-  -- in left-to-right order for generating hints
-  util.tbl_reverse(ancestors)
-
-  if #ancestors == 0 then
-    err('No proper node with siblings found to swap', config.debug)
-    return
-  end
-
-  -- pick: {cursor_node +  any ancestors} for swapping
-  local dim_exclude_range = { { last_row, 0 }, { last_row, 120 } }
-  local user_input = ui.prompt(bufnr, config, ancestors, dim_exclude_range, 1) -- no dim when picking swap_node ?
-  if not (type(user_input) == 'table' and #user_input == 1) then
-    err('did not get two valid user inputs', config.debug)
-    return
-  end
-  -- we want to pick siblings of user selected node (thus:  usr_node:parent())
-  local picked_node = ancestors[user_input[1]] -- for swap
-  local picked_parent = picked_node:parent()
-  local children = ts_utils.get_named_children(picked_parent)
-
-  -- remove children if child:type() == 'comment'
-  for i = #children, 1, -1 do
-    if children[i]:type() == 'comment' then table.remove(children, i) end
-  end
-
-  -- nothing to swap here
-  if #children < 2 then return end
-
-  return children, picked_node, picked_parent
-end
-
-function M.two_nodes_from_any(config)
-  local children, picked_node, picked_parent = M.ancestor_node_from_line(config)
-
-  local bufnr = vim.api.nvim_get_current_buf()
-  if children == nil or picked_node == nil or picked_parent == nil then return end
-  local sr, sc, er, ec = picked_parent:range()
-
-  local swap_node_idx, picked_node_idx
-
-  if config.autoswap and #children == 2 then -- auto swap picked_node with other sibling
-    if children[1] == picked_node then
-      swap_node_idx = 2
-      picked_node_idx = 1
-    else
-      swap_node_idx = 1
-      picked_node_idx = 2
-    end
-  else -- draw picker
-    for i, child in ipairs(children) do
-      if child == picked_node then
-        picked_node_idx = i
-        break
-      end
-    end
-    table.remove(children, picked_node_idx)
-
-    local user_input = ui.prompt(bufnr, config, children, { { sr, sc }, { er, ec } }, 1)
-    if not (type(user_input) == 'table' and #user_input == 1) then
-      err('did not get two valid user inputs', config.debug)
-      return
-    end
-    swap_node_idx = user_input[1]
-
-    -- restore picked_node
-    table.insert(children, picked_node_idx, picked_node)
-    if picked_node_idx <= swap_node_idx then swap_node_idx = swap_node_idx + 1 end
-  end
-
-  if children[swap_node_idx] == nil then
-    err('picked nil swap node', config.debug)
-    return
-  end
-
-  return children, picked_node_idx, swap_node_idx
-end
-
-function M.one_other_node_from_any(direction, config)
+function M.nodes_from_any(direction, config)
   local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
+  local select_two_nodes = direction == 2
 
   local cur_node = ts_utils.get_node_at_cursor(winid)
   if cur_node == nil then return end
@@ -255,10 +171,12 @@ function M.one_other_node_from_any(direction, config)
         ancestor_idx = 2
       end
     else -- draw picker
-      for i, child in ipairs(children) do
-        if child == ancestor then
-          ancestor_idx = i
-          break
+      if not select_two_nodes then
+        for i, child in ipairs(children) do
+          if child == ancestor then
+            ancestor_idx = i
+            break
+          end
         end
       end
       if direction == 'right' then
@@ -276,27 +194,36 @@ function M.one_other_node_from_any(direction, config)
           swap_node_idx = swap_node_idx - 1
         end
       else
-        table.remove(children, ancestor_idx)
+        if not select_two_nodes then
+          table.remove(children, ancestor_idx)
+        end
 
         local children_and_parents = config.label_parents and
-        util.join_lists({ children, vim.tbl_map(function(node) return node:parent() end, ancestors) }) or children
+            util.join_lists({ children, vim.tbl_map(function(node) return node:parent() end, ancestors) }) or children
 
-        local user_input, user_keys = ui.prompt(bufnr, config, children_and_parents, { { sr, sc }, { er, ec } }, 1, #children)
-        if not (type(user_input) == 'table' and #user_input == 1) then
-          if user_keys[1] == config.expand_key then goto continue end
-          if user_keys[1] == config.shrink_key then goto continue_prev end
-          err('did not get two valid user inputs', config.debug)
+        local times = select_two_nodes and 2 or 1
+        local user_input, user_keys = ui.prompt(bufnr, config, children_and_parents, { { sr, sc }, { er, ec } }, times,
+          #children)
+        if not (type(user_input) == 'table' and #user_input >= 1) then
+          if user_keys then
+            local inp = user_keys[2] or user_keys[1]
+            if inp == config.expand_key then goto continue end
+            if inp == config.shrink_key then goto continue_prev end
+          end
+          err('did not get valid user inputs', config.debug)
           return
         end
-        swap_node_idx = user_input[1]
+        swap_node_idx = select_two_nodes and user_input[2] or user_input[1]
         if swap_node_idx > #children then
           list_index = swap_node_idx - #children - 1
           goto continue
         end
-
-
-        table.insert(children, ancestor_idx, ancestor)
-        if ancestor_idx <= swap_node_idx then swap_node_idx = swap_node_idx + 1 end
+        if select_two_nodes then
+          ancestor_idx = user_input[1]
+        else
+          table.insert(children, ancestor_idx, ancestor)
+          if ancestor_idx <= swap_node_idx then swap_node_idx = swap_node_idx + 1 end
+        end
       end
     end
 
@@ -308,4 +235,5 @@ function M.one_other_node_from_any(direction, config)
     ::continue::
   end
 end
+
 return M

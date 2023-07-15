@@ -96,7 +96,7 @@ function M.iswap_node_with(direction, config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local children, outer_cursor_node_idx, swap_node_idx = choose.one_other_node_from_any(direction, config)
+  local children, outer_cursor_node_idx, swap_node_idx = choose.nodes_from_any(direction, config)
 
   if children then
     local ranges = internal.swap_nodes_and_return_new_ranges(
@@ -116,7 +116,7 @@ function M.imove_node_with(direction, config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local children, outer_cursor_node_idx, swap_node_idx = choose.one_other_node_from_any(direction, config)
+  local children, outer_cursor_node_idx, swap_node_idx = choose.nodes_from_any(direction, config)
 
   if children then
     local ranges = internal.move_node_to_index(children, outer_cursor_node_idx, swap_node_idx, config)
@@ -131,7 +131,7 @@ function M.iswap_node(config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local children, picked_node_idx, swap_node_idx = choose.two_nodes_from_any(config)
+  local children, picked_node_idx, swap_node_idx = choose.nodes_from_any(2, config)
 
   if children then
     local ranges =
@@ -147,7 +147,7 @@ function M.imove_node(config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local children, picked_node_idx, move_node_idx = choose.two_nodes_from_any(config)
+  local children, picked_node_idx, move_node_idx = choose.nodes_from_any(2, config)
 
   if children then
     local ranges = internal.move_node_to_index(children, picked_node_idx, move_node_idx, config)
