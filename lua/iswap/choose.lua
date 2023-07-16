@@ -97,17 +97,23 @@ local function choose(direction, config)
         if not (type(user_input) == 'table' and #user_input >= 1) then
           if user_keys then
             local inp = user_keys[2] or user_keys[1]
-            if inp == config.expand_key then goto continue end
+            if inp == config.expand_key then goto continue_next end
             if inp == config.shrink_key then goto continue_prev end
+            if not select_two_nodes then
+              if inp == config.incr_left_key then end
+              if inp == config.incr_right_key then end
+            end
           end
           err('did not get valid user inputs', config.debug)
           return
         end
+
         swap_node_idx = select_two_nodes and user_input[2] or user_input[1]
         if swap_node_idx > #children then
           list_index = swap_node_idx - #children - 1
-          goto continue
+          goto continue_next
         end
+
         if select_two_nodes then
           ancestor_idx = user_input[1]
         else
@@ -121,8 +127,10 @@ local function choose(direction, config)
     err('no node to swap with', config.debug)
 
     ::continue_prev::
-    list_index = list_index - 2
-    ::continue::
+    list_index = list_index - 1
+    ::continue_none::
+    list_index = list_index - 1
+    ::continue_next::
   end
 end
 
