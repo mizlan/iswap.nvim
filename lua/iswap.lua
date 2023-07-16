@@ -71,14 +71,14 @@ function M.swap(direction, config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local children, a_idx, b_idx = choose(direction, config)
-
-  if children then
+  choose(direction, config, function(children, a_idx, b_idx)
     local ranges =
-      internal.swap_nodes_and_return_new_ranges(children[a_idx], children[b_idx], bufnr, config.move_cursor)
+      internal.swap_ranges_and_return_new_ranges(children[a_idx], children[b_idx], bufnr, config.move_cursor)
 
     ui.flash_confirm(bufnr, ranges, config)
-  end
+
+    return ranges
+  end)
 
   repeat_set(function() M.swap(direction, config) end)
 end
@@ -86,13 +86,13 @@ function M.move(direction, config)
   config = M.evaluate_config(config)
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local children, a_idx, b_idx = choose(direction, config)
-
-  if children then
+  choose(direction, config, function(children, a_idx, b_idx)
     local ranges = internal.move_node_to_index(children, a_idx, b_idx, config.move_cursor)
 
     ui.flash_confirm(bufnr, ranges, config)
-  end
+
+    return ranges
+  end)
 
   repeat_set(function() M.move(direction, config) end)
 end
