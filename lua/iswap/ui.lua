@@ -24,9 +24,9 @@ end
 -- Prompt user from NODES a total of TIMES times in BUFNR. CONFIG is used for
 -- customization and ACTIVE_RANGE looks like {{row, col}, {row, col}} and is
 -- used only to determine where to grey out
-function M.prompt(bufnr, config, nodes, active_range, times, parents_after)
+function M.prompt(bufnr, config, ranges, active_range, times, parents_after)
   local keys = config.keys
-  if #nodes > #keys then
+  if #ranges > #keys then
     if parents_after and parents_after > #keys then
       -- TODO: do something about this
       -- too many nodes, not enough keys, and I don't want to start using prefixes
@@ -43,13 +43,13 @@ function M.prompt(bufnr, config, nodes, active_range, times, parents_after)
   end
 
   local imap = {}
-  for i, node in ipairs(nodes) do
+  for i, range in ipairs(ranges) do
     local key = keys:sub(i, i)
     if key == '' then break end
     imap[key] = i
     local is_child = parents_after and (i <= parents_after)
-    if is_child then ts_utils.highlight_node(node, bufnr, M.iswap_ns, config.hl_selection) end
-    local start_row, start_col = node:range()
+    if is_child then ts_utils.highlight_range(range, bufnr, M.iswap_ns, config.hl_selection) end
+    local start_row, start_col = unpack(range)
     vim.api.nvim_buf_set_extmark(bufnr, M.iswap_ns, start_row, start_col,
       {
         virt_text = { { key, is_child and config.hl_snipe or config.hl_parent } },

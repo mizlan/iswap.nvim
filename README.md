@@ -1,6 +1,6 @@
 # iswap.nvim
 
-> ⚠️  If you're getting an error updating this repository, **delete it, and
+> ⚠️ If you're getting an error updating this repository, **delete it, and
 > install it again**! See [#58](https://github.com/mizlan/iswap.nvim/issues/58) for details.
 
 Interactively select and swap: function arguments, list elements, function
@@ -101,5 +101,5 @@ inspired by [hop.nvim](https://github.com/phaazon/hop.nvim) and
 
 Change defaults?
 
-- `ISwap[Node]With`: Visual mode selection to move/swap multiple nodes
-- `ISwap[Node]With`: Incremental mode while labels are visible
+- `ISwap[Node]With`: Visual mode selection to move/swap multiple nodes at once
+- `ISwap[Node]With`: Incremental mode while labels are visible (DONE: FIX BUGS)

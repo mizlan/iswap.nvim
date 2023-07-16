@@ -65,37 +65,40 @@ function M.get_ancestors_at_cursor(cur_node, only_current_line, config, needs_cu
     parent = parent:parent()
   end
 
-  ancestors = vim.tbl_filter(function(ancestor)
+  local lists = {}
+  for _, ancestor in ipairs(ancestors) do
     local parent = ancestor:parent()
-    if parent == nil then
+    if parent ~= nil then
+      local children = ts_utils.get_named_children(parent)
+      if #children >= 2 then
+        local ancestor_idx = 1
+        for i, child in ipairs(children) do
+          if child == ancestor then
+            ancestor_idx = i
+            break
+          end
+        end
+        lists[#lists + 1] = { parent, children, ancestor_idx }
+      else
+        err('No siblings found for swap', config.debug)
+      end
+    else
       err('No parent found for swap', config.debug)
-      return false
     end
-    local children = ts_utils.get_named_children(parent)
-
-    -- nothing to swap here
-    if #children < 2 then
-      err('No siblings found for swap', config.debug)
-      return false
-    end
-
-    return true
-  end, ancestors)
+  end
 
   local initial = 1
-  local list_indices = {}
-  local lists = M.get_list_nodes_at_cursor(vim.api.nvim_get_current_win(), config, needs_cursor_node)
-  if lists and #lists >= 1 then
-    for j, ancestor in ipairs(ancestors) do
-      if ancestor:parent() and ancestor:parent() == lists[1][1] then
+  local list_nodes = M.get_list_nodes_at_cursor(vim.api.nvim_get_current_win(), config, needs_cursor_node)
+  if list_nodes and #list_nodes >= 1 then
+    for j, list in ipairs(lists) do
+      if list[1] and list[1] == list_nodes[1][1] then
         initial = j
-        list_indices[#list_indices + 1] = j
         err('found list ancestor', config.debug)
       end
     end
   end
 
-  return ancestors, last_row, initial, list_indices
+  return lists, last_row, initial
 end
 
 -- returns list_nodes
@@ -247,16 +250,14 @@ function M.move_node_to_index(children, cur_node_idx, a_idx, should_move_cursor)
   local bufnr = vim.api.nvim_get_current_buf()
   if a_idx == cur_node_idx + 1 or a_idx == cur_node_idx - 1 then
     -- This means the node is adjacent, swap and move are equivalent
-    return M.swap_nodes_and_return_new_ranges(children[cur_node_idx], children[a_idx], bufnr, should_move_cursor)
+    return M.swap_ranges_and_return_new_ranges(children[cur_node_idx], children[a_idx], bufnr, should_move_cursor)
   end
 
-  local children_ranges = vim.tbl_map(function(node) return { node:range() } end, children)
-  local cur_range = children_ranges[cur_node_idx]
+  local cur_range = children[cur_node_idx]
 
   local incr = (cur_node_idx < a_idx) and 1 or -1
   for i = cur_node_idx + incr, a_idx, incr do
-    local _, b_range =
-      unpack(M.swap_ranges_and_return_new_ranges(cur_range, children_ranges[i], bufnr, should_move_cursor))
+    local _, b_range = unpack(M.swap_ranges_and_return_new_ranges(cur_range, children[i], bufnr, should_move_cursor))
     cur_range = b_range
   end
 
