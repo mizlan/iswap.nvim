@@ -33,7 +33,7 @@ function M.prompt(bufnr, config, ranges, active_range, times, parents_after)
       err('Too many nodes but not enough keys!', true)
       return
     else
-      err('Too many nodes, but can exclude parents', true)
+      err('Too many nodes, but can exclude parents', config.debug)
     end
   end
 

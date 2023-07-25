@@ -1,4 +1,5 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
+local ts = vim.treesitter
 local queries = require('nvim-treesitter.query')
 local util = require('iswap.util')
 local err = util.err
@@ -11,7 +12,7 @@ local M = {}
 -- had to modify the function body of an existing function in ts_utils
 
 --
-function M.find(winid, cursor_range)
+function M.find(cursor_range)
   local bufnr = vim.api.nvim_get_current_buf()
   local sr, er = cursor_range[1], cursor_range[3]
   er = (er and (er + 1)) or (sr + 1)
@@ -30,9 +31,62 @@ function M.find(winid, cursor_range)
   return q:iter_captures(root, bufnr, sr, er)
 end
 
+local function filter_ancestor(ancestor, config, cursor_range, lists)
+  local parent = ancestor:parent()
+  if parent == nil then
+    err('No parent found for swap', config.debug)
+    return
+  end
+
+  local children = ts_utils.get_named_children(parent)
+  if #children < 2 then
+    err('No siblings found for swap', config.debug)
+    return
+  end
+
+  -- TODO: filter out comment nodes,
+  -- unless theyre in the visual range,
+  -- or have to be moved through,
+  -- needs design
+  -- comment nodes could be assumed to be a part of the following node
+  -- children = vim.tbl_filter(config.ignore_nodes, children)
+
+  local cur_nodes = util.nodes_intersecting_range(children, cursor_range)
+  if #cur_nodes >= 1 then
+    if #cur_nodes > 1 then
+      if config.debug then
+        err('multiple found, merging', true)
+        local first = cur_nodes[1]
+        for i, id in ipairs(cur_nodes) do
+          if id ~= first + i - 1 then
+            err('multiple nodes are not contiguous, there should be no way for this to happen', true)
+          end
+        end
+      end
+      cur_nodes = { cur_nodes[1], cur_nodes[#cur_nodes] }
+    end
+    lists[#lists + 1] = { parent, children, unpack(cur_nodes) }
+  else
+    lists[#lists + 1] = { parent, children, 1 }
+  end
+end
+
 -- Returns ancestors from inside to outside
-function M.get_ancestors_at_cursor(cur_node, only_current_line, config, needs_cursor_node)
+function M.get_ancestors_at_cursor(only_current_line, config, needs_cursor_node)
+  local winid = vim.api.nvim_get_current_win()
+  local cursor_range = util.get_cursor_range(winid)
+  local cur_node = ts.get_node {
+    pos = { cursor_range[1], cursor_range[2] },
+  }
+  if cur_node == nil then return end
   local parent = cur_node -- :parent()
+  if parent:type() == 'comment' then
+    cur_node = ts.get_node {
+      pos = { cursor_range[3], cursor_range[4] },
+    }
+    if cur_node == nil then return end
+    parent = cur_node
+  end
 
   if not parent then
     err('did not find a satisfiable parent node', config.debug)
@@ -67,28 +121,11 @@ function M.get_ancestors_at_cursor(cur_node, only_current_line, config, needs_cu
 
   local lists = {}
   for _, ancestor in ipairs(ancestors) do
-    local parent = ancestor:parent()
-    if parent ~= nil then
-      local children = ts_utils.get_named_children(parent)
-      if #children >= 2 then
-        local ancestor_idx = 1
-        for i, child in ipairs(children) do
-          if child == ancestor then
-            ancestor_idx = i
-            break
-          end
-        end
-        lists[#lists + 1] = { parent, children, ancestor_idx }
-      else
-        err('No siblings found for swap', config.debug)
-      end
-    else
-      err('No parent found for swap', config.debug)
-    end
+    filter_ancestor(ancestor, config, cursor_range, lists)
   end
 
   local initial = 1
-  local list_nodes = M.get_list_nodes_at_cursor(vim.api.nvim_get_current_win(), config, needs_cursor_node)
+  local list_nodes = M.get_list_nodes_at_cursor(winid, config, needs_cursor_node)
   if list_nodes and #list_nodes >= 1 then
     for j, list in ipairs(lists) do
       if list[1] and list[1] == list_nodes[1][1] then
@@ -107,7 +144,7 @@ function M.get_list_nodes_at_cursor(winid, config, needs_cursor_node)
   local visual_sel = #cursor_range > 2
 
   local ret = {}
-  local iswap_list_captures = M.find(winid, cursor_range)
+  local iswap_list_captures = M.find(cursor_range)
   if not iswap_list_captures then
     -- query not supported
     return
@@ -118,10 +155,10 @@ function M.get_list_nodes_at_cursor(winid, config, needs_cursor_node)
     if util.node_intersects_range(node, cursor_range) and node:named_child_count() > 1 then
       local children = ts_utils.get_named_children(node)
       if needs_cursor_node then
-        local cur_nodes = util.nodes_containing_range(children, cursor_range)
+        local cur_nodes = util.nodes_intersecting_range(children, cursor_range)
         if #cur_nodes >= 1 then
           if #cur_nodes > 1 then err('multiple found, using first', config.debug) end
-          ret[#ret + 1] = { node, children, cur_nodes[1] }
+          ret[#ret + 1] = { node, children, unpack(cur_nodes) }
         end
       else
         local r = { node, children }
@@ -149,7 +186,7 @@ local function node_or_range_get_text(node_or_range, bufnr)
   if not node_or_range then return {} end
 
   -- We have to remember that end_col is end-exclusive
-  local start_row, start_col, end_row, end_col = vim.treesitter.get_node_range(node_or_range)
+  local start_row, start_col, end_row, end_col = ts.get_node_range(node_or_range)
 
   if end_col == 0 then
     if start_row == end_row then
@@ -163,10 +200,9 @@ local function node_or_range_get_text(node_or_range, bufnr)
 end
 
 -- node 'a' is the one the cursor is on
-function M.swap_nodes_and_return_new_ranges(a, b, bufnr, should_move_cursor)
-  return M.swap_ranges_and_return_new_ranges({ a:range() }, { b:range() }, bufnr, should_move_cursor)
-end
-function M.swap_ranges_and_return_new_ranges(a, b, bufnr, should_move_cursor)
+
+function M.swap_ranges(a, b, should_move_cursor)
+  local bufnr = vim.api.nvim_get_current_buf()
   local winid = vim.api.nvim_get_current_win()
 
   local a_sr, a_sc = unpack(a)
@@ -246,22 +282,45 @@ function M.swap_ranges_and_return_new_ranges(a, b, bufnr, should_move_cursor)
   return { a_data, b_data }
 end
 
-function M.move_node_to_index(children, cur_node_idx, a_idx, should_move_cursor)
-  local bufnr = vim.api.nvim_get_current_buf()
+function M.move_range(children, cur_node_idx, a_idx, should_move_cursor)
   if a_idx == cur_node_idx + 1 or a_idx == cur_node_idx - 1 then
     -- This means the node is adjacent, swap and move are equivalent
-    return M.swap_ranges_and_return_new_ranges(children[cur_node_idx], children[a_idx], bufnr, should_move_cursor)
+    return M.swap_ranges(children[cur_node_idx], children[a_idx], should_move_cursor)
   end
 
   local cur_range = children[cur_node_idx]
 
   local incr = (cur_node_idx < a_idx) and 1 or -1
   for i = cur_node_idx + incr, a_idx, incr do
-    local _, b_range = unpack(M.swap_ranges_and_return_new_ranges(cur_range, children[i], bufnr, should_move_cursor))
+    local _, b_range = unpack(M.swap_ranges(cur_range, children[i], should_move_cursor))
     cur_range = b_range
   end
 
   return { cur_range }
+end
+function M.move_range_in_place(children, cur_node_idx, a_idx, should_move_cursor)
+  if a_idx == cur_node_idx + 1 or a_idx == cur_node_idx - 1 then
+    -- This means the node is adjacent, swap and move are equivalent
+    return M.swap_ranges_in_place(children, cur_node_idx, a_idx, should_move_cursor)
+  end
+
+  local flash_range = children[cur_node_idx]
+
+  local incr = (cur_node_idx < a_idx) and 1 or -1
+  for i = cur_node_idx + incr, a_idx, incr do
+    local _, b_range = unpack(M.swap_ranges_in_place(children, cur_node_idx, i, should_move_cursor))
+    cur_node_idx = i
+    flash_range = b_range
+  end
+
+  return { flash_range }
+end
+
+function M.swap_ranges_in_place(children, a_idx, b_idx, should_move_cursor)
+  local swapped = M.swap_ranges(children[a_idx], children[b_idx], should_move_cursor)
+  children[a_idx] = swapped[1]
+  children[b_idx] = swapped[2]
+  return swapped
 end
 
 function M.attach(bufnr, lang)

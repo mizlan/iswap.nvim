@@ -1,5 +1,4 @@
 local util = require('iswap.util')
-local ts_utils = require('nvim-treesitter.ts_utils')
 local internal = require('iswap.internal')
 local ui = require('iswap.ui')
 local err = util.err
@@ -10,8 +9,21 @@ local function autoswap(config, iters)
   if config.autoswap == "after_label" then return iters ~= 1 end
 end
 
-local function ranges(parent, children, ancestor_idx)
-  return { { parent:range() }, vim.tbl_map(function(child) return { child:range() } end, children), ancestor_idx }
+local function ranges(parent, children, ...)
+  return { { parent:range() }, vim.tbl_map(function(child) return { child:range() } end, children), ... }
+end
+
+-- merge all nodes from cur_idx:last_idx into one and return the new children array
+-- the merged node will be at children[cur_idx]
+local function merge_nodes(children, cur_idx, last_idx)
+  -- TODO: performance improvements?
+  local nodes = vim.list_slice(children, cur_idx + 1, last_idx)
+  local merged = children[cur_idx]
+  for _, child in ipairs(nodes) do
+    merged = util.merge(merged, child)
+  end
+  local pre, post = vim.list_slice(children, 1, cur_idx - 1), vim.list_slice(children, last_idx + 1)
+  return util.join_lists { pre, { merged }, post }
 end
 
 local function choose(direction, config, callback)
@@ -23,70 +35,88 @@ local function choose(direction, config, callback)
 
   local lists, list_index
   if config.all_nodes then
-    local cur_node = ts_utils.get_node_at_cursor(winid)
-    if cur_node == nil then return end
-    lists, _, list_index =
-      internal.get_ancestors_at_cursor(cur_node, config.only_current_line, config, not select_two_nodes)
+    if type(config.all_nodes) == 'function' then
+      lists, list_index = config.all_nodes(direction, config)
+      if list_index == nil then list_index = 1 end
+    else
+      lists, _, list_index = internal.get_ancestors_at_cursor(config.only_current_line, config, not select_two_nodes)
+    end
   else
     lists = internal.get_list_nodes_at_cursor(winid, config, not select_two_nodes)
     list_index = 1
   end
   if not lists then return end
   lists = vim.tbl_map(function(list) return ranges(unpack(list)) end, lists)
+  local parents = vim.tbl_map(function(list) return list[1] end, lists)
+  local incremental_mode = false
 
   while true do
     iters = iters + 1
-    local parent, children, ancestor_idx = unpack(lists[list_index])
-    local ancestor = children[ancestor_idx]
+    -- TODO: handle multiple cur_nodes
+    local parent, children, cur_idx, last_idx = unpack(lists[list_index])
+    if last_idx then
+      children = merge_nodes(children, cur_idx, last_idx)
+      lists[list_index] = { parent, children, cur_idx }
+    end
 
     local sr, sc, er, ec = unpack(parent)
 
     -- a and b are the nodes to swap
     local swap_node_idx
 
-    if autoswap(config, iters) and #children == 2 then -- auto swap ancestor with other sibling
-      swap_node_idx = 3 - ancestor_idx
-    else -- draw picker
-      local function increment(dir)
-        swap_node_idx = ancestor_idx + dir
-        -- local swap_node = children[swap_node_idx]
-        -- while swap_node ~= nil and swap_node:type() == 'comment' do
-        --   swap_node_idx = swap_node_idx + dir
-        --   swap_node = children[swap_node_idx]
-        -- end
-      end
-      if direction == 'right' then
-        increment(1)
-      elseif direction == 'left' then
-        increment(-1)
+    local function increment(dir)
+      swap_node_idx = cur_idx + dir
+      if swap_node_idx > #children then swap_node_idx = 1 end
+      if swap_node_idx < 1 then swap_node_idx = #children end
+    end
+    if direction == 'right' then
+      increment(1)
+    elseif direction == 'left' then
+      increment(-1)
+    else
+      local removed
+      if not select_two_nodes then removed = table.remove(children, cur_idx) end
+
+      if autoswap(config, iters) and #children == 1 then
+        swap_node_idx = 1
       else
-        if not select_two_nodes then table.remove(children, ancestor_idx) end
         local function increment_swap(dir)
-          table.insert(children, ancestor_idx, ancestor)
+          table.insert(children, cur_idx, removed)
+          incremental_mode = true
           increment(dir)
-          local swapped = callback(children, ancestor_idx, swap_node_idx)
-          children[ancestor_idx] = swapped[1]
+          local swapped = callback(children, swap_node_idx, cur_idx)
+          children[cur_idx] = swapped[1]
           children[swap_node_idx] = swapped[2]
           lists[list_index][3] = swap_node_idx
+          cur_idx = swap_node_idx
+          -- FIXME: this might be glitchy if user changes parent
+          -- specifically to a smaller parent: need to recompute cur_idx
+          -- maybe remove all labels after doing an incremental swap?
+          -- is there any reason to use labels after an incremental swap?
+          -- it would be nice if any other key would be fed to the main neovim loop so we don't even have to hit <esc>
         end
 
-        local children_and_parents = config.label_parents
-            and util.join_lists { children, vim.tbl_map(function(list) return list[1] end, lists) }
-          or children
-
+        local children_and_parents, parents_after
+        if incremental_mode then
+          children_and_parents, parents_after = { removed }, 2
+        else
+          children_and_parents = config.label_parents and util.join_lists { children, parents } or children
+          parents_after = #children
+        end
         local times = select_two_nodes and 2 or 1
+
         local user_input, user_keys =
-          ui.prompt(bufnr, config, children_and_parents, { { sr, sc }, { er, ec } }, times, #children)
+          ui.prompt(bufnr, config, children_and_parents, { { sr, sc }, { er, ec } }, times, parents_after)
         if not (type(user_input) == 'table' and #user_input >= 1) then
           if user_keys then
             local inp = user_keys[2] or user_keys[1]
             if inp == config.expand_key then
               list_index = list_index + 1
-              goto continue
+              goto insert_continue
             end
             if inp == config.shrink_key then
               list_index = list_index - 1
-              goto continue
+              goto insert_continue
             end
             if not select_two_nodes then
               if inp == config.incr_left_key then
@@ -102,23 +132,25 @@ local function choose(direction, config, callback)
           err('did not get valid user inputs', config.debug)
           return
         end
+        if incremental_mode then return end
 
         swap_node_idx = select_two_nodes and user_input[2] or user_input[1]
         if swap_node_idx > #children then
           list_index = swap_node_idx - #children
-          goto continue
+          goto insert_continue
         end
 
-        if select_two_nodes then
-          ancestor_idx = user_input[1]
-        else
-          table.insert(children, ancestor_idx, ancestor)
-          if ancestor_idx <= swap_node_idx then swap_node_idx = swap_node_idx + 1 end
-        end
+        if select_two_nodes then cur_idx = user_input[1] end
+      end
+
+      ::insert_continue::
+      if not select_two_nodes then
+        table.insert(children, cur_idx, removed)
+        if swap_node_idx and cur_idx <= swap_node_idx then swap_node_idx = swap_node_idx + 1 end
       end
     end
 
-    if children[swap_node_idx] ~= nil then return callback(children, ancestor_idx, swap_node_idx) end
+    if children[swap_node_idx] ~= nil then return callback(children, swap_node_idx, cur_idx) end
     err('no node to swap with', config.debug)
 
     ::continue::
