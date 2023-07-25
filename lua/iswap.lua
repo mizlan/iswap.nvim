@@ -60,7 +60,7 @@ function M.init()
     -- vim.cmd('command ' .. cmd .. " lua require'iswap'." .. rhs)
     vim.api.nvim_create_user_command(cmd, cb, {})
     -- map('n', '<Plug>' .. plug, "<cmd>lua require'iswap'." .. rhs .. '<cr>')
-    map('n', '<Plug>' .. plug, cb)
+    map('n', '<Plug>' .. plug, cb, { desc = cmd })
   end
   map('n', '<Plug>ISwapRepeat', function()
     if last_iswap then last_iswap() end
