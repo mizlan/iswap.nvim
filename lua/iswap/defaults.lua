@@ -20,5 +20,6 @@ M.only_current_line = true
 M.visual_select_list = true
 M.label_parents = true
 M.all_nodes = true
+M.ignore_nodes = function(node) return node:type() ~= 'comment' end
 
 return M

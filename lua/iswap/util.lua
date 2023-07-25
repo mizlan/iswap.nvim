@@ -47,6 +47,12 @@ function M.intersects(a, b, c)
   end
 end
 
+function M.merge(a, b)
+  local ac, ar = unpack(a)
+  local _, _, bc, br = unpack(b)
+  return { ac, ar, bc, br }
+end
+
 local feedkeys = vim.api.nvim_feedkeys
 local termcodes = vim.api.nvim_replace_termcodes
 local function t(k) return termcodes(k, true, true, true) end
@@ -105,6 +111,20 @@ function M.range_containing_nodes(nodes, range)
     if M.range_contains_node(node, range) then
       table.insert(idxs, i)
     end
+  end
+  return idxs
+end
+function M.nodes_intersecting_range(nodes, pos)
+  local idxs = {}
+  for i, node in ipairs(nodes) do
+    if M.node_intersects_range(node, pos) then table.insert(idxs, i) end
+  end
+  return idxs
+end
+function M.range_intersecting_nodes(nodes, range)
+  local idxs = {}
+  for i, node in ipairs(nodes) do
+    if M.range_intersects_node(node, range) then table.insert(idxs, i) end
   end
   return idxs
 end
