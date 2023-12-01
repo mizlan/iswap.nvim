@@ -1,6 +1,6 @@
 # iswap.nvim
 
-> **Important**
+> [!TIP]
 > If you're getting an error updating this repository, **delete it, and install
 > it again**! See [#58](https://github.com/mizlan/iswap.nvim/issues/58) for details.
 
