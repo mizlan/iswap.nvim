@@ -17,6 +17,14 @@ For vim-plug:
 Plug 'mizlan/iswap.nvim'
 ```
 
+For [lazy.nvim](https://github.com/folke/lazy.nvim):
+```lua
+{
+  "mizlan/iswap.nvim",
+  event = "VeryLazy"
+}
+```
+
 ## usage
 
 Run the command `:ISwap` when your cursor is in a location that is suitable for
