@@ -1,5 +1,3 @@
-[
-  (list)
-  (table)
-  (sequence)
-] @iswap-list
+(_
+  open: ["(" "[" "{"]
+  close: [")" "]" "}"]) @iswap-list
