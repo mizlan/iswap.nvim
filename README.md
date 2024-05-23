@@ -47,6 +47,9 @@ will 'move' the node to the chosen position, rather than swapping. This is
 equivalent to swapping the first node with all of the nodes up to and including
 the second node.
 
+For `I(Swap|Move)(With)?` you can bind it to a key in visual mode to influence
+node selection.
+
 ## configuration
 
 In your `init.lua`:
@@ -87,8 +90,12 @@ require('iswap').setup{
   move_cursor = true,
 
   -- Automatically swap with only two arguments
-  -- default nil
+  -- default false
   autoswap = true,
+
+  -- Keys that will use to expand the list/node that you are swapping within
+  -- Choose a key that is not in the `keys` config otherwise it won't work
+  expand_key = 'z'
 
   -- Other default options you probably should not change:
   debug = nil,
@@ -98,3 +105,10 @@ require('iswap').setup{
 
 inspired by [hop.nvim](https://github.com/phaazon/hop.nvim) and
 [nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects)
+
+## TODO
+
+- Change defaults?
+- `ISwap[Node]With`: Visual mode selection to move/swap multiple nodes at once
+- `ISwap[Node]With`: Incremental mode while labels are visible (DONE: FIX BUGS)
+- Remove all mentions of `ts_utils`, clason is going to smite it out of existence
