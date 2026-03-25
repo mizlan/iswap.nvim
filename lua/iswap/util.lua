@@ -58,6 +58,17 @@ function M.has_siblings(node)
   return node:next_named_sibling() ~= nil or node:prev_named_sibling() ~= nil
 end
 
+function M.get_named_children(node)
+  return node:named_children()
+end
+
+function M.get_node_at_cursor(winid)
+  local bufnr = vim.api.nvim_win_get_buf(winid)
+  local cursor = vim.api.nvim_win_get_cursor(winid)
+  local row, col = cursor[1] - 1, cursor[2]
+  return vim.treesitter.get_node({ bufnr = bufnr, pos = { row, col } })
+end
+
 function M.getchar_handler()
   local ok, key = pcall(vim.fn.getchar)
   if not ok then return nil end

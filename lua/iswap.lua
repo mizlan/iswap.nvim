@@ -1,7 +1,5 @@
-local queries = require('nvim-treesitter.query')
 local ui = require('iswap.ui')
 local internal = require('iswap.internal')
-local ts_utils = require('nvim-treesitter.ts_utils')
 local default_config = require('iswap.defaults')
 local util = require('iswap.util')
 local choose = require('iswap.choose')
@@ -21,15 +19,6 @@ function M.evaluate_config(config)
 end
 
 function M.init()
-  require 'nvim-treesitter'.define_modules {
-    iswap = {
-      module_path = 'iswap.internal',
-      is_supported = function(lang)
-        return queries.get_query(lang, 'iswap-list') ~= nil
-      end
-    }
-  }
-
   -- <Plug>ISwap will delay because it becomes <Plug>ISwapWith prefix sequence.
   -- Use <Plug>ISwapNormal instead and etc for others
   local cmds = {
