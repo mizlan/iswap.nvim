@@ -138,8 +138,8 @@ function M.swap_ranges_and_return_new_ranges(a, b, bufnr, should_move_cursor)
   local _a_ec = (#text2 > 1) and #text2[#text2] or a_sc + #text2[#text2]
   local _b_sr = b_sr + line_delta
   local _b_sc = b_sc + char_delta
-  local _b_er = b_sr + #text1 - 1
-  local _b_ec = (#text1 > 1) and #text1[#text1] or b_sc + #text1[#text1]
+  local _b_er = _b_sr + #text1 - 1
+  local _b_ec = (#text1 > 1) and #text1[#text1] or _b_sc + #text1[#text1]
 
   local a_data = { _a_sr, _a_sc, _a_er, _a_ec }
   local b_data = { _b_sr, _b_sc, _b_er, _b_ec }
