@@ -8,4 +8,5 @@
   (object)
   (object_type)
   (object_pattern)
+  (ternary_expression)
 ] @iswap-list
